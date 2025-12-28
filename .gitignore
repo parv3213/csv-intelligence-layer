@@ -15,7 +15,6 @@ coverage/
 .nyc_output/
 
 # Editor directories and system files
-.vscode/
 .idea/
 .DS_Store
 
@@ -25,9 +24,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Vite cache
-.vite/
+# Drizzle files
+drizzle/
 
-# Misc
-.cache/
-*.sqlite
+# Temporary storage files
+temp/

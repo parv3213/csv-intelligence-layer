@@ -1,0 +1,7 @@
+user_email,Full Name,DATE_SIGNED_UP,Total Revenue
+john@example.com,John Doe,01/15/2024,1500.50
+jane@example.com,Jane Smith,2024-02-20,$2,300.00
+,Bob Johnson,March 10 2024,890.25
+alice@company.io,,2024-04-05,
+invalid-email,Alice Williams,2024-04-05,not a number
+john@example.com,Duplicate John,2024-05-01,100
