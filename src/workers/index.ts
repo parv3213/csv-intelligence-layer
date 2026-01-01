@@ -1,18 +1,33 @@
 import 'dotenv/config';
 import { logger } from '../utils/logger.js';
+import { waitForDeps } from "../utils/waitForDeps.js";
 import { closeQueues } from './queues.js';
-
-// Import all workers to start them
-import './parse.worker.js';
-// TODO: Add other workers as they're implemented
-// import './infer.worker.js';
-// import './map.worker.js';
-// import './validate.worker.js';
-// import './output.worker.js';
 
 const log = logger.child({ module: 'worker-main' });
 
-log.info('Workers started');
+async function startWorkers() {
+  try {
+    log.info("Waiting for dependencies (DB, Redis)...");
+    await waitForDeps();
+    log.info("Dependencies ready");
+
+    // Import workers after deps are ready so they don't initialize until Redis/DB are reachable
+    await import("./parse.worker.js");
+    // TODO: Add other workers as they're implemented
+    // await import('./infer.worker.js');
+    // await import('./map.worker.js');
+    // await import('./validate.worker.js');
+    // await import('./output.worker.js');
+
+    log.info("Workers started");
+  } catch (err) {
+    log.error({ err }, "Worker startup failed");
+    await closeQueues();
+    process.exit(1);
+  }
+}
+
+startWorkers();
 
 // Graceful shutdown
 const shutdown = async () => {

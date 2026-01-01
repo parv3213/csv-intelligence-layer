@@ -81,6 +81,7 @@ export const ingestionRoutes: FastifyPluginAsyncZod = async (fastify) => {
           schemaId: z.uuid().optional(),
         }),
         body: z.object({
+          // FIXME On swagger UI, this appears as type "string" - need to fix
           file: z.any().describe("CSV file to upload"),
         }),
         response: {

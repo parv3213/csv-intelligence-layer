@@ -1,8 +1,8 @@
 import { parse } from 'csv-parse';
 import { createReadStream } from 'fs';
 import { Readable } from 'stream';
-import type { InferenceInput } from './type-inference.js';
-import { config } from '../config.js';
+import { config } from "../config.js";
+import type { InferenceInput } from "./type-inference.js";
 
 // =============================================================================
 // TYPES
@@ -36,32 +36,48 @@ export interface ParseError {
 // DELIMITER DETECTION
 // =============================================================================
 
-const COMMON_DELIMITERS = [',', ';', '\t', '|'];
+const COMMON_DELIMITERS = [",", ";", "\t", "|"];
 
-async function detectDelimiter(filePath: string): Promise<string> {
+// Escape a string for use in a RegExp
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+async function detectDelimiter(
+  filePath: string,
+  encoding?: BufferEncoding
+): Promise<string> {
   return new Promise((resolve, reject) => {
     const stream = createReadStream(filePath, { end: 4096 }); // Read first 4KB
-    let data = '';
-    
-    stream.on('data', (chunk) => {
-      data += chunk.toString();
+    let data = "";
+
+    if (encoding) {
+      stream.setEncoding(encoding);
+    }
+
+    stream.on("data", (chunk) => {
+      data += typeof chunk === "string" ? chunk : chunk.toString();
     });
-    
-    stream.on('end', () => {
-      const firstLine = data.split('\n')[0] || '';
-      
-      // Count occurrences of each delimiter in first line
-      const counts = COMMON_DELIMITERS.map((delim) => ({
-        delim,
-        count: (firstLine.match(new RegExp(`\\${delim}`, 'g')) || []).length,
-      }));
-      
+
+    stream.on("end", () => {
+      if (!data) return resolve(",");
+      const firstLine = data.split("\n")[0] || "";
+      if (!firstLine) return resolve(",");
+
+      // Count occurrences of each delimiter in first line using escaped regex
+      const counts = COMMON_DELIMITERS.map((delim) => {
+        const pattern = new RegExp(escapeRegExp(delim), "g");
+        const count = (firstLine.match(pattern) || []).length;
+        return { delim, count };
+      });
+
       // Pick the one with highest count (and at least 1)
       counts.sort((a, b) => b.count - a.count);
-      resolve(counts[0]?.count > 0 ? counts[0].delim : ',');
+      const best = counts[0];
+      resolve(best && best.count > 0 ? best.delim : ",");
     });
-    
-    stream.on('error', reject);
+
+    stream.on("error", reject);
   });
 }
 
@@ -78,15 +94,23 @@ export async function parseCSV(
     skipEmptyLines = true,
     relaxColumnCount = true,
   } = options;
-  
-  // Auto-detect delimiter if not provided
-  const delimiter = options.delimiter ?? (await detectDelimiter(filePath));
-  
+
+  // Auto-detect delimiter if not provided (best-effort)
+  let delimiter = options.delimiter;
+  if (!delimiter) {
+    try {
+      delimiter = await detectDelimiter(filePath, options.encoding);
+    } catch (err) {
+      // fallback to comma on detection failure
+      delimiter = ",";
+    }
+  }
+
   const parseErrors: ParseError[] = [];
   const rows: Record<string, unknown>[] = [];
   let columns: string[] = [];
   let totalRowCount = 0;
-  
+
   return new Promise((resolve, reject) => {
     const parser = parse({
       delimiter,
@@ -95,35 +119,35 @@ export async function parseCSV(
       columns: true, // Use first row as headers
       skip_empty_lines: skipEmptyLines,
       relax_column_count: relaxColumnCount,
-      on_record: (record, context) => {
+      on_record: (record) => {
         totalRowCount++;
-        
+
         // Capture column names from first record
         if (columns.length === 0) {
-          columns = Object.keys(record);
+          columns = Object.keys(record as Record<string, unknown>);
         }
-        
+
         // Only keep samples up to sampleSize
         if (rows.length < sampleSize) {
-          rows.push(record);
+          rows.push(record as Record<string, unknown>);
         }
-        
+
         return record;
       },
     });
-    
-    parser.on('error', (err) => {
+
+    parser.on("error", (err) => {
       parseErrors.push({
         row: totalRowCount,
         message: err.message,
       });
     });
-    
+
     const stream = createReadStream(filePath);
-    
+
     stream
       .pipe(parser)
-      .on('end', () => {
+      .on("end", () => {
         resolve({
           columns,
           rows,
@@ -132,7 +156,7 @@ export async function parseCSV(
           detectedDelimiter: delimiter,
         });
       })
-      .on('error', reject);
+      .on("error", reject);
   });
 }
 
@@ -145,17 +169,17 @@ export async function parseCSVBuffer(
   options: ParseOptions = {}
 ): Promise<ParseResult> {
   const {
-    delimiter = ',',
+    delimiter = ",",
     sampleSize = config.inferenceSampleSize,
     skipEmptyLines = true,
     relaxColumnCount = true,
   } = options;
-  
+
   const parseErrors: ParseError[] = [];
   const rows: Record<string, unknown>[] = [];
   let columns: string[] = [];
   let totalRowCount = 0;
-  
+
   return new Promise((resolve, reject) => {
     const parser = parse({
       delimiter,
@@ -166,31 +190,31 @@ export async function parseCSVBuffer(
       relax_column_count: relaxColumnCount,
       on_record: (record) => {
         totalRowCount++;
-        
+
         if (columns.length === 0) {
-          columns = Object.keys(record);
+          columns = Object.keys(record as Record<string, unknown>);
         }
-        
+
         if (rows.length < sampleSize) {
-          rows.push(record);
+          rows.push(record as Record<string, unknown>);
         }
-        
+
         return record;
       },
     });
-    
-    parser.on('error', (err) => {
+
+    parser.on("error", (err) => {
       parseErrors.push({
         row: totalRowCount,
         message: err.message,
       });
     });
-    
-    const readable = Readable.from(buffer);
-    
+
+    const readable = Readable.from([buffer]);
+
     readable
       .pipe(parser)
-      .on('end', () => {
+      .on("end", () => {
         resolve({
           columns,
           rows,
@@ -199,7 +223,7 @@ export async function parseCSVBuffer(
           detectedDelimiter: delimiter,
         });
       })
-      .on('error', reject);
+      .on("error", reject);
   });
 }
 

@@ -11,6 +11,7 @@ import {
 } from "fastify-type-provider-zod";
 import { config } from "./config.js";
 import { loggerConfig } from "./utils/logger.js";
+import { waitForDeps } from "./utils/waitForDeps.js";
 import { redis } from "./workers/queues.js";
 
 // Import routes
@@ -83,6 +84,10 @@ export async function startServer() {
   process.on("SIGTERM", shutdown);
 
   try {
+    server.log.info("Waiting for dependencies (DB, Redis)...");
+    await waitForDeps();
+    server.log.info("Dependencies ready");
+
     await server.listen({ port: config.port, host: config.host });
     server.log.info(`Server running at http://${config.host}:${config.port}`);
     server.log.info(`API docs at http://${config.host}:${config.port}/docs`);
