@@ -10,7 +10,7 @@ import { QUEUE_NAMES, inferQueue, redis, type ParseJobData } from "./queues.js";
 const log = logger.child({ worker: "parse" });
 
 async function processParseJob(job: Job<ParseJobData>): Promise<void> {
-  const { ingestionId, rawFileKey, schemaId } = job.data;
+  const { ingestionId, rawFileKey } = job.data;
 
   log.info({ ingestionId, rawFileKey }, "Starting parse job");
 

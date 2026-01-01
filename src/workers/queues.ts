@@ -33,7 +33,6 @@ export const QUEUE_NAMES = {
 export interface ParseJobData {
   ingestionId: string;
   rawFileKey: string;
-  schemaId: string | null;
 }
 
 export interface InferJobData {
@@ -126,13 +125,12 @@ export const outputQueueEvents = new QueueEvents(QUEUE_NAMES.OUTPUT, {
 
 export async function startIngestionPipeline(
   ingestionId: string,
-  rawFileKey: string,
-  schemaId: string | null
+  rawFileKey: string
 ): Promise<Job<ParseJobData>> {
   // Start with parse job - each worker will trigger the next stage
   return parseQueue.add(
     `parse-${ingestionId}`,
-    { ingestionId, rawFileKey, schemaId },
+    { ingestionId, rawFileKey },
     {
       jobId: `parse-${ingestionId}`,
     }

@@ -78,6 +78,7 @@ export const ingestionRoutes: FastifyPluginAsyncZod = async (fastify) => {
         tags: ["ingestions"],
         consumes: ["multipart/form-data"],
         querystring: z.object({
+          // FIXME Should probably made this mandatory
           schemaId: z.uuid().optional(),
         }),
         body: z.object({
@@ -132,7 +133,7 @@ export const ingestionRoutes: FastifyPluginAsyncZod = async (fastify) => {
       });
 
       // Start pipeline
-      await startIngestionPipeline(ingestionId, rawFileKey, schemaId ?? null);
+      await startIngestionPipeline(ingestionId, rawFileKey);
 
       return reply.code(202).send({
         id: ingestionId,

@@ -1,7 +1,7 @@
 import { parse } from 'csv-parse';
-import { createReadStream } from 'fs';
-import { Readable } from 'stream';
+import { createReadStream } from "fs";
 import { config } from "../config.js";
+import { logger } from "../utils/logger.js";
 import type { InferenceInput } from "./type-inference.js";
 
 // =============================================================================
@@ -100,8 +100,16 @@ export async function parseCSV(
   if (!delimiter) {
     try {
       delimiter = await detectDelimiter(filePath, options.encoding);
+      logger.info(
+        { filePath, detectedDelimiter: delimiter },
+        "parseCSV: detected delimiter"
+      );
     } catch (err) {
       // fallback to comma on detection failure
+      logger.warn(
+        { filePath, err },
+        "parseCSV: delimiter detection failed, falling back to comma"
+      );
       delimiter = ",";
     }
   }
@@ -112,6 +120,15 @@ export async function parseCSV(
   let totalRowCount = 0;
 
   return new Promise((resolve, reject) => {
+    let settled = false;
+    const finishOnce = (fn: () => void) => {
+      return () => {
+        if (settled) return;
+        settled = true;
+        fn();
+      };
+    };
+
     const parser = parse({
       delimiter,
       quote: options.quote ?? '"',
@@ -141,13 +158,27 @@ export async function parseCSV(
         row: totalRowCount,
         message: err.message,
       });
+      logger.error({ filePath, row: totalRowCount, err }, "csv-parse error");
+
+      if (!settled) {
+        settled = true;
+        reject(err);
+      }
     });
 
     const stream = createReadStream(filePath);
 
-    stream
-      .pipe(parser)
-      .on("end", () => {
+    stream.on("error", (err) => {
+      logger.error({ filePath, err }, "read stream error");
+      if (!settled) {
+        settled = true;
+        reject(err);
+      }
+    });
+
+    parser.on(
+      "end",
+      finishOnce(() => {
         resolve({
           columns,
           rows,
@@ -156,65 +187,11 @@ export async function parseCSV(
           detectedDelimiter: delimiter,
         });
       })
-      .on("error", reject);
-  });
-}
+    );
 
-// =============================================================================
-// PARSE FROM BUFFER (for API uploads)
-// =============================================================================
-
-export async function parseCSVBuffer(
-  buffer: Buffer,
-  options: ParseOptions = {}
-): Promise<ParseResult> {
-  const {
-    delimiter = ",",
-    sampleSize = config.inferenceSampleSize,
-    skipEmptyLines = true,
-    relaxColumnCount = true,
-  } = options;
-
-  const parseErrors: ParseError[] = [];
-  const rows: Record<string, unknown>[] = [];
-  let columns: string[] = [];
-  let totalRowCount = 0;
-
-  return new Promise((resolve, reject) => {
-    const parser = parse({
-      delimiter,
-      quote: options.quote ?? '"',
-      escape: options.escape ?? '"',
-      columns: true,
-      skip_empty_lines: skipEmptyLines,
-      relax_column_count: relaxColumnCount,
-      on_record: (record) => {
-        totalRowCount++;
-
-        if (columns.length === 0) {
-          columns = Object.keys(record as Record<string, unknown>);
-        }
-
-        if (rows.length < sampleSize) {
-          rows.push(record as Record<string, unknown>);
-        }
-
-        return record;
-      },
-    });
-
-    parser.on("error", (err) => {
-      parseErrors.push({
-        row: totalRowCount,
-        message: err.message,
-      });
-    });
-
-    const readable = Readable.from([buffer]);
-
-    readable
-      .pipe(parser)
-      .on("end", () => {
+    parser.on(
+      "finish",
+      finishOnce(() => {
         resolve({
           columns,
           rows,
@@ -223,9 +200,96 @@ export async function parseCSVBuffer(
           detectedDelimiter: delimiter,
         });
       })
-      .on("error", reject);
+    );
+
+    parser.on(
+      "close",
+      finishOnce(() => {
+        resolve({
+          columns,
+          rows,
+          totalRowCount,
+          parseErrors,
+          detectedDelimiter: delimiter,
+        });
+      })
+    );
+
+    // Pipe after listeners attached
+    stream.pipe(parser);
   });
 }
+
+// // =============================================================================
+// // PARSE FROM BUFFER (for API uploads)
+// // =============================================================================
+
+// export async function parseCSVBuffer(
+//   buffer: Buffer,
+//   options: ParseOptions = {}
+// ): Promise<ParseResult> {
+//   const {
+//     delimiter = ",",
+//     sampleSize = config.inferenceSampleSize,
+//     skipEmptyLines = true,
+//     relaxColumnCount = true,
+//   } = options;
+
+//   const parseErrors: ParseError[] = [];
+//   const rows: Record<string, unknown>[] = [];
+//   let columns: string[] = [];
+//   let totalRowCount = 0;
+
+//   return new Promise((resolve, reject) => {
+//     const parser = parse({
+//       delimiter,
+//       quote: options.quote ?? '"',
+//       escape: options.escape ?? '"',
+//       columns: true,
+//       skip_empty_lines: skipEmptyLines,
+//       relax_column_count: relaxColumnCount,
+//       on_record: (record) => {
+//         totalRowCount++;
+
+//         if (columns.length === 0) {
+//           columns = Object.keys(record as Record<string, unknown>);
+//         }
+
+//         if (rows.length < sampleSize) {
+//           rows.push(record as Record<string, unknown>);
+//         }
+
+//         return record;
+//       },
+//     });
+
+//     parser.on("error", (err) => {
+//       parseErrors.push({
+//         row: totalRowCount,
+//         message: err.message,
+//       });
+//       logger.error({ err, filePath: "buffer" }, "csv-parse buffer error");
+//     });
+
+//     const readable = Readable.from([buffer]);
+
+//     readable
+//       .pipe(parser)
+//       .on("end", () => {
+//         resolve({
+//           columns,
+//           rows,
+//           totalRowCount,
+//           parseErrors,
+//           detectedDelimiter: delimiter,
+//         });
+//       })
+//       .on("error", (err) => {
+//         logger.error({ err }, "parseCSVBuffer: parser stream error");
+//         reject(err);
+//       });
+//   });
+// }
 
 // =============================================================================
 // CONVERT TO INFERENCE INPUT
