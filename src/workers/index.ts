@@ -13,13 +13,12 @@ async function startWorkers() {
 
     // Import workers after deps are ready so they don't initialize until Redis/DB are reachable
     await import("./parse.worker.js");
-    // TODO: Add other workers as they're implemented
-    // await import('./infer.worker.js');
-    // await import('./map.worker.js');
-    // await import('./validate.worker.js');
-    // await import('./output.worker.js');
+    await import("./infer.worker.js");
+    await import("./map.worker.js");
+    await import("./validate.worker.js");
+    await import("./output.worker.js");
 
-    log.info("Workers started");
+    log.info("All workers started (parse, infer, map, validate, output)");
   } catch (err) {
     log.error({ err }, "Worker startup failed");
     await closeQueues();
