@@ -1,5 +1,5 @@
 import { Job, Worker } from "bullmq";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { stringify } from "csv-stringify/sync";
 import { db } from "../db/index.js";
 import { decisionLogs, ingestions, schemas } from "../db/schema.js";
@@ -134,6 +134,16 @@ async function processOutputJob(job: Job<OutputJobData>): Promise<void> {
     .where(eq(ingestions.id, ingestionId));
 
   try {
+    // Clear any existing decision logs for this stage (idempotency for retries)
+    await db
+      .delete(decisionLogs)
+      .where(
+        and(
+          eq(decisionLogs.ingestionId, ingestionId),
+          eq(decisionLogs.stage, "output")
+        )
+      );
+
     // Get ingestion record
     const [ingestion] = await db
       .select()
@@ -181,6 +191,8 @@ async function processOutputJob(job: Job<OutputJobData>): Promise<void> {
     }
 
     // Re-parse CSV and transform rows
+    // NOTE: For large files, consider streaming or consuming validated data from previous
+    // stage to avoid re-parsing. Current architecture prioritizes simplicity over memory efficiency.
     const filePath = await getFilePath(ingestion.rawFileKey);
     const parseResult = await parseCSV(filePath, { sampleSize: Infinity });
 

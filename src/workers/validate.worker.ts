@@ -1,5 +1,5 @@
 import { Job, Worker } from "bullmq";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { decisionLogs, ingestions, schemas } from "../db/schema.js";
 import { parseCSV } from "../services/csv-parser.js";
@@ -76,33 +76,51 @@ function coerceValue(
 
     case "date":
     case "datetime": {
-      // Try to parse date, considering coerceFormats if specified
+      // Try to parse date with explicit format handling
       // Note: columnDef.coerceFormats available for future custom format support
       let parsedDate: Date | null = null;
 
-      // Try ISO format first
-      const isoDate = new Date(str);
-      if (!isNaN(isoDate.getTime())) {
-        parsedDate = isoDate;
+      // Try ISO format first (most reliable)
+      const isoDateMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (isoDateMatch) {
+        const isoDate = new Date(str);
+        if (!isNaN(isoDate.getTime())) {
+          parsedDate = isoDate;
+        }
       }
 
       if (!parsedDate) {
-        // Try common date formats
-        const commonPatterns = [
-          /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, // MM/DD/YYYY or DD/MM/YYYY
-          /^(\d{1,2})-(\d{1,2})-(\d{4})$/, // MM-DD-YYYY or DD-MM-YYYY
-          /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/, // YYYY/MM/DD
-        ];
+        // Try YYYY/MM/DD format
+        const ymdMatch = str.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+        if (ymdMatch) {
+          const [, year, month, day] = ymdMatch;
+          const testDate = new Date(parseInt(year!), parseInt(month!) - 1, parseInt(day!));
+          if (!isNaN(testDate.getTime())) {
+            parsedDate = testDate;
+          }
+        }
+      }
 
-        for (const pattern of commonPatterns) {
-          const match = str.match(pattern);
-          if (match) {
-            // Assume US format MM/DD/YYYY for now
-            const testDate = new Date(str);
-            if (!isNaN(testDate.getTime())) {
-              parsedDate = testDate;
-              break;
-            }
+      if (!parsedDate) {
+        // Try MM/DD/YYYY format (US format - explicit assumption)
+        const mdyMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (mdyMatch) {
+          const [, month, day, year] = mdyMatch;
+          const testDate = new Date(parseInt(year!), parseInt(month!) - 1, parseInt(day!));
+          if (!isNaN(testDate.getTime())) {
+            parsedDate = testDate;
+          }
+        }
+      }
+
+      if (!parsedDate) {
+        // Try MM-DD-YYYY format
+        const mdyDashMatch = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+        if (mdyDashMatch) {
+          const [, month, day, year] = mdyDashMatch;
+          const testDate = new Date(parseInt(year!), parseInt(month!) - 1, parseInt(day!));
+          if (!isNaN(testDate.getTime())) {
+            parsedDate = testDate;
           }
         }
       }
@@ -399,6 +417,16 @@ async function processValidateJob(job: Job<ValidateJobData>): Promise<void> {
     .where(eq(ingestions.id, ingestionId));
 
   try {
+    // Clear any existing decision logs for this stage (idempotency for retries)
+    await db
+      .delete(decisionLogs)
+      .where(
+        and(
+          eq(decisionLogs.ingestionId, ingestionId),
+          eq(decisionLogs.stage, "validate")
+        )
+      );
+
     // Get ingestion record
     const [ingestion] = await db
       .select()
@@ -429,12 +457,13 @@ async function processValidateJob(job: Job<ValidateJobData>): Promise<void> {
     }
 
     // Get file path and re-parse CSV (we need all rows now, not just samples)
+    // NOTE: For large files, consider streaming or persisting validated data to avoid
+    // re-parsing in the output stage. Current architecture prioritizes simplicity.
     const filePath = await getFilePath(ingestion.rawFileKey);
     const parseResult = await parseCSV(filePath, { sampleSize: Infinity });
 
     // Validate all rows
     const rowErrors: RowError[] = [];
-    const validatedRows: Record<string, unknown>[] = [];
     const errorsByColumn: Record<string, number> = {};
     const seenValues = new Map<string, Set<unknown>>(); // For uniqueness tracking
 
@@ -472,11 +501,9 @@ async function processValidateJob(job: Job<ValidateJobData>): Promise<void> {
             break;
           case "flag":
             action = "flagged";
-            validatedRows.push(validationResult.data);
             break;
           case "coerce_default":
             action = "coerced";
-            validatedRows.push(validationResult.data);
             break;
           case "abort":
             throw new Error(
@@ -489,14 +516,8 @@ async function processValidateJob(job: Job<ValidateJobData>): Promise<void> {
           errors: validationResult.errors,
           action,
         });
-
-        if (action === "rejected") {
-          // Don't include rejected rows in output
-          continue;
-        }
       } else {
         validRowCount++;
-        validatedRows.push(validationResult.data);
       }
     }
 

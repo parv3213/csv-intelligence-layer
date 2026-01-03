@@ -1,5 +1,5 @@
 import { Job, Worker } from "bullmq";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { decisionLogs, ingestions, schemas } from "../db/schema.js";
 import { applyHumanDecisions, mapColumns } from "../services/column-mapping.js";
@@ -21,6 +21,16 @@ async function processMapJob(job: Job<MapJobData>): Promise<void> {
     .where(eq(ingestions.id, ingestionId));
 
   try {
+    // Clear any existing decision logs for this stage (idempotency for retries)
+    await db
+      .delete(decisionLogs)
+      .where(
+        and(
+          eq(decisionLogs.ingestionId, ingestionId),
+          eq(decisionLogs.stage, "map")
+        )
+      );
+
     // Get ingestion record
     const [ingestion] = await db
       .select()

@@ -1,5 +1,5 @@
 import { Job, Worker } from "bullmq";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { decisionLogs, ingestions } from "../db/schema.js";
 import { parseCSV, toInferenceInput } from "../services/csv-parser.js";
@@ -22,6 +22,16 @@ async function processInferJob(job: Job<InferJobData>): Promise<void> {
     .where(eq(ingestions.id, ingestionId));
 
   try {
+    // Clear any existing decision logs for this stage (idempotency for retries)
+    await db
+      .delete(decisionLogs)
+      .where(
+        and(
+          eq(decisionLogs.ingestionId, ingestionId),
+          eq(decisionLogs.stage, "infer")
+        )
+      );
+
     // Get ingestion record to retrieve rawFileKey and schemaId
     const [ingestion] = await db
       .select()
