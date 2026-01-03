@@ -19,25 +19,19 @@ import type {
 // SCHEMAS TABLE
 // =============================================================================
 
-export const schemas = pgTable(
-  "schemas",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    name: text("name").notNull(),
-    version: text("version").notNull().default("1.0.0"),
-    description: text("description"),
-    definition: jsonb("definition").notNull().$type<CanonicalSchema>(),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-  },
-  (table) => ({
-    uniqueNameVersion: unique().on(table.name, table.version),
-  })
-);
+export const schemas = pgTable("schemas", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  version: text("version").notNull().default("1.0.0"),
+  description: text("description"),
+  definition: jsonb("definition").notNull().$type<CanonicalSchema>(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
 
 export type SchemaRow = typeof schemas.$inferSelect;
 export type NewSchemaRow = typeof schemas.$inferInsert;

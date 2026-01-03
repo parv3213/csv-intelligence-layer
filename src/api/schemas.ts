@@ -27,6 +27,7 @@ const SchemaListResponseSchema = z.array(SchemaResponseSchema);
 
 export const schemaRoutes: FastifyPluginAsyncZod = async (fastify) => {
   // Create a new schema
+  // TODO check proper return error
   fastify.post(
     "/",
     {
