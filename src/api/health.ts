@@ -23,6 +23,7 @@ export const healthRoutes: FastifyPluginAsync = async (fastify) => {
         tags: ["system"],
         response: {
           200: HealthResponseSchema,
+          503: HealthResponseSchema,
         },
       },
     },

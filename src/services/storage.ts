@@ -83,23 +83,23 @@ class S3Storage implements StorageProvider {
     // TODO: Initialize S3 client
   }
 
-  async save(key: string, data: Buffer | Readable): Promise<string> {
+  async save(_key: string, _data: Buffer | Readable): Promise<string> {
     throw new Error("S3 storage not implemented yet");
   }
 
-  async load(key: string): Promise<Buffer> {
+  async load(_key: string): Promise<Buffer> {
     throw new Error("S3 storage not implemented yet");
   }
 
-  async getPath(key: string): Promise<string> {
+  async getPath(_key: string): Promise<string> {
     throw new Error("S3 storage does not support direct paths");
   }
 
-  async delete(key: string): Promise<void> {
+  async delete(_key: string): Promise<void> {
     throw new Error("S3 storage not implemented yet");
   }
 
-  async exists(key: string): Promise<boolean> {
+  async exists(_key: string): Promise<boolean> {
     throw new Error("S3 storage not implemented yet");
   }
 }

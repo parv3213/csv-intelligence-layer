@@ -66,11 +66,6 @@ export function isJSON(value: string): boolean {
 // TYPE INFERENCE
 // =============================================================================
 
-interface TypeVote {
-  type: ColumnType;
-  count: number;
-}
-
 function detectType(value: string): ColumnType {
   const trimmed = value.trim();
   

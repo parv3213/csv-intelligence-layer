@@ -78,8 +78,7 @@ export const ingestionRoutes: FastifyPluginAsyncZod = async (fastify) => {
         tags: ["ingestions"],
         consumes: ["multipart/form-data"],
         querystring: z.object({
-          // FIXME Should probably made this mandatory
-          schemaId: z.uuid().optional(),
+          schemaId: z.uuid(),
         }),
         body: z.object({
           // FIXME On swagger UI, this appears as type "string" - need to fix
