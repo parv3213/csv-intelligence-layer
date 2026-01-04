@@ -20,6 +20,7 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:reset": "tsx scripts/reset-db.ts && drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"
