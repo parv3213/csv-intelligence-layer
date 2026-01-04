@@ -1,6 +1,9 @@
 # Node dependencies
 node_modules/
 
+# Package manager lock files (use pnpm-lock.yaml instead)
+package-lock.json
+
 # Environment files
 .env
 .env.local
