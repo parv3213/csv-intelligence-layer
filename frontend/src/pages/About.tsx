@@ -3,6 +3,7 @@ import { PageWrapper, PageHeader } from '@/components/layout/PageWrapper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { config } from '@/lib/config';
 
 const techStack = [
   { name: 'React 18', category: 'Frontend' },
@@ -120,7 +121,7 @@ export function AboutPage() {
           <CardContent>
             <div className="grid sm:grid-cols-3 gap-4">
               <a
-                href="https://github.com"
+                href={config.githubRepoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-accent transition-colors"
@@ -133,7 +134,7 @@ export function AboutPage() {
               </a>
 
               <a
-                href="https://github.com/issues"
+                href={config.githubIssuesUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-accent transition-colors"
@@ -146,7 +147,7 @@ export function AboutPage() {
               </a>
 
               <a
-                href="mailto:hello@example.com"
+                href={`mailto:${config.contactEmail}`}
                 className="flex items-center gap-3 p-4 border rounded-lg hover:bg-accent transition-colors"
               >
                 <Mail className="h-8 w-8" />

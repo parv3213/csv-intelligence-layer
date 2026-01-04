@@ -7,8 +7,9 @@ import type {
   MappingDecision,
   DecisionLog,
 } from '@/types';
+import { config } from './config';
 
-const API_BASE = import.meta.env.VITE_API_BASE || '';
+const API_BASE = config.apiBase;
 
 class ApiError extends Error {
   status: number;

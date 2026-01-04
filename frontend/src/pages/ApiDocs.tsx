@@ -4,6 +4,7 @@ import { PageWrapper, PageHeader } from '@/components/layout/PageWrapper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { config } from '@/lib/config';
 
 export function ApiDocsPage() {
   const [swaggerUrl, setSwaggerUrl] = useState<string | null>(null);
@@ -11,7 +12,7 @@ export function ApiDocsPage() {
 
   useEffect(() => {
     // Try to determine the API base URL
-    const apiBase = import.meta.env.VITE_API_BASE || window.location.origin;
+    const apiBase = config.apiBase || window.location.origin;
     const docsUrl = `${apiBase}/docs`;
     setSwaggerUrl(docsUrl);
   }, []);

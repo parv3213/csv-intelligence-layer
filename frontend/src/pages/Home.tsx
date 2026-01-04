@@ -3,6 +3,7 @@ import { ArrowRight, FileSpreadsheet, Eye, Zap, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageWrapper } from '@/components/layout/PageWrapper';
+import { config } from '@/lib/config';
 
 const features = [
   {
@@ -61,7 +62,7 @@ export function HomePage() {
       <section className="py-20 md:py-32">
         <div className="container text-center">
           <div className="inline-flex items-center rounded-full border px-3 py-1 text-sm mb-6">
-            <span className="font-mono">v1.0</span>
+            <span className="font-mono">v{config.projectVersion}</span>
             <span className="mx-2 text-muted-foreground">·</span>
             <span>Open Source</span>
           </div>
