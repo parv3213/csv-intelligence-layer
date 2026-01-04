@@ -11,8 +11,10 @@ export function ApiDocsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Try to determine the API base URL
-    const apiBase = config.apiBase || window.location.origin;
+    // Always point to backend server for Swagger UI
+    // In development: http://localhost:3000/docs
+    // In production: config.apiBase should be set to backend URL
+    const apiBase = config.apiBase || 'http://localhost:3000';
     const docsUrl = `${apiBase}/docs`;
     setSwaggerUrl(docsUrl);
   }, []);
