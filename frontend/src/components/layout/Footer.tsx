@@ -1,4 +1,5 @@
-import { Github, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Github, FileText } from 'lucide-react';
 import { config } from '@/lib/config';
 
 export function Footer() {
@@ -17,13 +18,13 @@ export function Footer() {
           >
             <Github className="h-5 w-5" />
           </a>
-          <a
-            href="/api-docs"
+          <Link
+            to="/api-docs"
             className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
           >
             API Docs
-            <ExternalLink className="h-3 w-3" />
-          </a>
+            <FileText className="h-3 w-3" />
+          </Link>
         </div>
       </div>
     </footer>
