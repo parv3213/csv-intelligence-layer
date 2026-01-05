@@ -1,6 +1,16 @@
 # CSV Intelligence Layer
 
+> **⚠️ Beta Status**: This project is currently in beta. Features and APIs may change.
+
 A production-grade data ingestion and normalization service that treats CSVs as hostile input and processes them through a deterministic, multi-stage pipeline.
+
+## 🚀 Live Demo
+
+[![Try Live Demo](https://img.shields.io/badge/Try%20Live%20Demo-4285F4?style=for-the-badge&logo=vercel&logoColor=white)](https://csv-intelligence.vercel.app/)
+[![Watch Demo Video](https://img.shields.io/badge/Watch%20Demo%20Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](#demo-video)
+
+- **Frontend**: [https://csv-intelligence.vercel.app/](https://csv-intelligence.vercel.app/)
+- **Backend API**: `csv-intelligence-layer.railway.internal`
 
 ## Overview
 
