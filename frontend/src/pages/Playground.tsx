@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Download, Play, RotateCcw } from 'lucide-react';
+import { Download, Play, RotateCcw, History, ChevronDown, ChevronUp } from 'lucide-react';
 import { PageWrapper, PageHeader } from '@/components/layout/PageWrapper';
 import { SchemaSelector } from '@/components/schema/SchemaSelector';
 import { SchemaPreview } from '@/components/schema/SchemaPreview';
@@ -10,6 +10,11 @@ import { HistoryPanel } from '@/components/pipeline/HistoryPanel';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { useCreateIngestion, useIngestion, useDownloadOutput } from '@/hooks/useIngestion';
 import type { SchemaResponse } from '@/types';
 
@@ -20,6 +25,7 @@ export function PlaygroundPage() {
   const [selectedSchema, setSelectedSchema] = useState<SchemaResponse | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [currentIngestionId, setCurrentIngestionId] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const createIngestionMutation = useCreateIngestion();
   const { data: ingestion, isLoading: isLoadingIngestion } = useIngestion(currentIngestionId);
@@ -76,6 +82,7 @@ export function PlaygroundPage() {
   const handleHistorySelect = useCallback((id: string) => {
     setCurrentIngestionId(id);
     setStep('processing');
+    setHistoryOpen(false);
   }, []);
 
   const handleReviewResolved = useCallback(() => {
@@ -93,6 +100,31 @@ export function PlaygroundPage() {
         description="Upload and process CSV files against your schema"
       />
 
+      {/* Mobile History Toggle */}
+      <div className="lg:hidden mb-4">
+        <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              <span className="flex items-center gap-2">
+                <History className="h-4 w-4" />
+                Recent Jobs
+              </span>
+              {historyOpen ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4">
+            <HistoryPanel
+              onSelectEntry={handleHistorySelect}
+              currentIngestionId={currentIngestionId}
+            />
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+
       <div className="grid lg:grid-cols-[1fr_300px] gap-6">
         <div className="space-y-6">
           {/* Step 1: Schema Selection */}
@@ -107,7 +139,7 @@ export function PlaygroundPage() {
           {step === 'upload' && selectedSchema && (
             <>
               <div className="flex items-center justify-between">
-                <Button variant="ghost" onClick={() => setStep('schema')}>
+                <Button variant="ghost" onClick={() => setStep('schema')} className="text-sm">
                   ← Change Schema
                 </Button>
               </div>
@@ -122,12 +154,12 @@ export function PlaygroundPage() {
               />
 
               {selectedFile && (
-                <div className="flex justify-end gap-3">
+                <div className="flex justify-end gap-2 sm:gap-3">
                   <Button
                     size="lg"
                     onClick={handleStartProcessing}
                     disabled={createIngestionMutation.isPending}
-                    className="gap-2"
+                    className="gap-2 w-full sm:w-auto"
                   >
                     <Play className="h-4 w-4" />
                     {createIngestionMutation.isPending
@@ -152,26 +184,28 @@ export function PlaygroundPage() {
           {/* Step 3: Processing / Review / Complete */}
           {step === 'processing' && (
             <>
-              <div className="flex items-center justify-between">
-                <Button variant="ghost" onClick={handleReset}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <Button variant="ghost" onClick={handleReset} className="text-sm">
                   ← Start New Job
                 </Button>
                 {isComplete && (
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 w-full sm:w-auto">
                     <Button
                       variant="outline"
                       onClick={() => handleDownload('json')}
                       disabled={downloadMutation.isPending}
+                      className="flex-1 sm:flex-none"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      JSON
+                      <span className="hidden sm:inline">Download </span>JSON
                     </Button>
                     <Button
                       onClick={() => handleDownload('csv')}
                       disabled={downloadMutation.isPending}
+                      className="flex-1 sm:flex-none"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Download CSV
+                      <span className="hidden sm:inline">Download </span>CSV
                     </Button>
                   </div>
                 )}
@@ -204,22 +238,22 @@ export function PlaygroundPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div>
-                        <p className="text-2xl font-bold">{ingestion.rowCount}</p>
-                        <p className="text-sm text-muted-foreground">Total Rows</p>
+                    <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
+                      <div className="p-2 sm:p-0">
+                        <p className="text-xl sm:text-2xl font-bold">{ingestion.rowCount ?? 0}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Total Rows</p>
                       </div>
-                      <div>
-                        <p className="text-2xl font-bold text-green-600">
-                          {ingestion.validRowCount}
+                      <div className="p-2 sm:p-0">
+                        <p className="text-xl sm:text-2xl font-bold text-green-600">
+                          {ingestion.validRowCount ?? 0}
                         </p>
-                        <p className="text-sm text-muted-foreground">Valid Rows</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Valid Rows</p>
                       </div>
-                      <div>
-                        <p className="text-2xl font-bold text-yellow-600">
-                          {(ingestion.rowCount || 0) - (ingestion.validRowCount || 0)}
+                      <div className="p-2 sm:p-0">
+                        <p className="text-xl sm:text-2xl font-bold text-yellow-600">
+                          {(ingestion.rowCount ?? 0) - (ingestion.validRowCount ?? 0)}
                         </p>
-                        <p className="text-sm text-muted-foreground">Issues</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Issues</p>
                       </div>
                     </div>
                   </CardContent>
@@ -236,17 +270,21 @@ export function PlaygroundPage() {
                       {ingestion.mappingResult.mappings.map((mapping) => (
                         <div
                           key={mapping.sourceColumn}
-                          className="flex items-center justify-between p-2 rounded border bg-muted/30 text-sm"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-2 sm:p-3 rounded border bg-muted/30 text-sm gap-1 sm:gap-2"
                         >
-                          <code className="font-mono">{mapping.sourceColumn}</code>
-                          <span className="text-muted-foreground">→</span>
-                          <code className="font-mono">
-                            {mapping.targetColumn || (
-                              <span className="text-muted-foreground italic">
-                                unmapped
-                              </span>
-                            )}
-                          </code>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <code className="font-mono text-xs sm:text-sm bg-background px-1 py-0.5 rounded">
+                              {mapping.sourceColumn}
+                            </code>
+                            <span className="text-muted-foreground">→</span>
+                            <code className="font-mono text-xs sm:text-sm bg-background px-1 py-0.5 rounded">
+                              {mapping.targetColumn || (
+                                <span className="text-muted-foreground italic">
+                                  unmapped
+                                </span>
+                              )}
+                            </code>
+                          </div>
                           <span className="text-xs text-muted-foreground">
                             ({mapping.method})
                           </span>
@@ -260,8 +298,8 @@ export function PlaygroundPage() {
           )}
         </div>
 
-        {/* Sidebar: History */}
-        <div className="space-y-6">
+        {/* Sidebar: History - Hidden on mobile, shown in collapsible above */}
+        <div className="hidden lg:block space-y-6">
           <HistoryPanel
             onSelectEntry={handleHistorySelect}
             currentIngestionId={currentIngestionId}
