@@ -213,6 +213,8 @@ export type RowError = z.infer<typeof RowErrorSchema>;
 export const ValidationResultSchema = z.object({
   validRowCount: z.number(),
   invalidRowCount: z.number(),
+  totalRowCount: z.number().optional(),
+  outputRowCount: z.number().optional(),
   errors: z.array(RowErrorSchema),
   errorsByColumn: z.record(z.string(), z.number()),
 });

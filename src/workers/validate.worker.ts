@@ -554,9 +554,17 @@ async function processValidateJob(job: Job<ValidateJobData>): Promise<void> {
       }
     }
 
+    const totalRowCount = validRowCount + invalidRowCount;
+    const rejectedRowCount = rowErrors.filter(
+      (e) => e.action === "rejected"
+    ).length;
+    const outputRowCount = totalRowCount - rejectedRowCount;
+
     const validationResult: ValidationResult = {
       validRowCount,
       invalidRowCount,
+      totalRowCount,
+      outputRowCount,
       errors: rowErrors,
       errorsByColumn,
     };
@@ -566,6 +574,8 @@ async function processValidateJob(job: Job<ValidateJobData>): Promise<void> {
         ingestionId,
         validRowCount,
         invalidRowCount,
+        totalRowCount,
+        outputRowCount,
         errorCount: rowErrors.length,
       },
       "Validation complete"

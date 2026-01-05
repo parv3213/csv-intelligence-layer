@@ -139,6 +139,8 @@ export interface RowError {
 export interface ValidationResult {
   validRowCount: number;
   invalidRowCount: number;
+  totalRowCount?: number;
+  outputRowCount?: number;
   errors: RowError[];
   errorsByColumn: Record<string, number>;
 }

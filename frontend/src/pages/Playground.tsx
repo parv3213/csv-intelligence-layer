@@ -271,27 +271,32 @@ export function PlaygroundPage() {
                     <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
                       <div className="p-2 sm:p-0">
                         <p className="text-xl sm:text-2xl font-bold">
-                          {ingestion.rowCount ?? 0}
+                          {ingestion.validationResult?.totalRowCount ??
+                            ingestion.rowCount ??
+                            0}
                         </p>
                         <p className="text-xs sm:text-sm text-muted-foreground">
                           Total Rows
                         </p>
                       </div>
                       <div className="p-2 sm:p-0">
-                        <p className="text-xl sm:text-2xl font-bold text-green-600">
-                          {ingestion.validRowCount ?? 0}
+                        <p className="text-xl sm:text-2xl font-bold text-yellow-600">
+                          {ingestion.validationResult?.invalidRowCount ??
+                            (ingestion.rowCount ?? 0) -
+                              (ingestion.validRowCount ?? 0)}
                         </p>
                         <p className="text-xs sm:text-sm text-muted-foreground">
-                          Valid Rows
+                          Rows with Errors
                         </p>
                       </div>
                       <div className="p-2 sm:p-0">
-                        <p className="text-xl sm:text-2xl font-bold text-yellow-600">
-                          {(ingestion.rowCount ?? 0) -
-                            (ingestion.validRowCount ?? 0)}
+                        <p className="text-xl sm:text-2xl font-bold text-green-600">
+                          {ingestion.validationResult?.outputRowCount ??
+                            ingestion.validRowCount ??
+                            0}
                         </p>
                         <p className="text-xs sm:text-sm text-muted-foreground">
-                          Issues
+                          Final Output Rows
                         </p>
                       </div>
                     </div>
