@@ -1,28 +1,46 @@
-import { Clock, FileSpreadsheet, Trash2, Download } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useHistoryStore } from '@/stores/history';
-import { formatRelativeTime, getStatusColor, getStatusLabel, truncateFilename } from '@/lib/utils';
-import { useDownloadOutput } from '@/hooks/useIngestion';
-import type { HistoryEntry } from '@/types';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useHistoryRefresher } from "@/hooks/useHistoryRefresher";
+import { useDownloadOutput } from "@/hooks/useIngestion";
+import {
+  formatRelativeTime,
+  getStatusColor,
+  getStatusLabel,
+  truncateFilename,
+} from "@/lib/utils";
+import { useHistoryStore } from "@/stores/history";
+import type { HistoryEntry } from "@/types";
+import { Clock, Download, FileSpreadsheet, Trash2 } from "lucide-react";
 
 interface HistoryPanelProps {
   onSelectEntry: (id: string) => void;
   currentIngestionId: string | null;
 }
 
-export function HistoryPanel({ onSelectEntry, currentIngestionId }: HistoryPanelProps) {
+export function HistoryPanel({
+  onSelectEntry,
+  currentIngestionId,
+}: HistoryPanelProps) {
   const { entries, removeEntry, clearHistory } = useHistoryStore();
   const downloadMutation = useDownloadOutput();
 
+  // Refresh status of incomplete jobs
+  useHistoryRefresher();
+
   const handleDownload = (entry: HistoryEntry) => {
-    if (entry.status === 'complete') {
+    if (entry.status === "complete") {
       downloadMutation.mutate({
         id: entry.id,
         filename: entry.filename,
-        format: 'csv',
+        format: "csv",
       });
     }
   };
@@ -99,14 +117,11 @@ function HistoryEntryCard({
   return (
     <div
       className={`p-3 border rounded-lg transition-colors ${
-        isSelected ? 'border-primary bg-primary/5' : 'hover:bg-accent/50'
+        isSelected ? "border-primary bg-primary/5" : "hover:bg-accent/50"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <button
-          onClick={onSelect}
-          className="flex-1 text-left min-w-0"
-        >
+        <button onClick={onSelect} className="flex-1 text-left min-w-0">
           <div className="flex items-center gap-2">
             <FileSpreadsheet className="h-4 w-4 text-muted-foreground shrink-0" />
             <span className="font-medium text-sm truncate">
@@ -132,7 +147,7 @@ function HistoryEntryCard({
         </button>
 
         <div className="flex items-center gap-1">
-          {entry.status === 'complete' && (
+          {entry.status === "complete" && (
             <Button
               variant="ghost"
               size="icon"

@@ -1,39 +1,67 @@
-import { useState, useCallback } from 'react';
-import { Download, Play, RotateCcw, History, ChevronDown, ChevronUp } from 'lucide-react';
-import { PageWrapper, PageHeader } from '@/components/layout/PageWrapper';
-import { SchemaSelector } from '@/components/schema/SchemaSelector';
-import { SchemaPreview } from '@/components/schema/SchemaPreview';
-import { CsvUploader } from '@/components/upload/CsvUploader';
-import { PipelineTracker } from '@/components/pipeline/PipelineTracker';
-import { ReviewPanel } from '@/components/pipeline/ReviewPanel';
-import { HistoryPanel } from '@/components/pipeline/HistoryPanel';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { PageHeader, PageWrapper } from "@/components/layout/PageWrapper";
+import { HistoryPanel } from "@/components/pipeline/HistoryPanel";
+import { PipelineTracker } from "@/components/pipeline/PipelineTracker";
+import { ReviewPanel } from "@/components/pipeline/ReviewPanel";
+import { SchemaPreview } from "@/components/schema/SchemaPreview";
+import { SchemaSelector } from "@/components/schema/SchemaSelector";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { useCreateIngestion, useIngestion, useDownloadOutput } from '@/hooks/useIngestion';
-import type { SchemaResponse } from '@/types';
+} from "@/components/ui/collapsible";
+import { CsvUploader } from "@/components/upload/CsvUploader";
+import {
+  useCreateIngestion,
+  useDownloadOutput,
+  useIngestion,
+} from "@/hooks/useIngestion";
+import { useSchema } from "@/hooks/useSchemas";
+import type { SchemaResponse } from "@/types";
+import {
+  ChevronDown,
+  ChevronUp,
+  Download,
+  History,
+  Play,
+  RotateCcw,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
-type PlaygroundStep = 'schema' | 'upload' | 'processing' | 'complete';
+type PlaygroundStep = "schema" | "upload" | "processing" | "complete";
 
 export function PlaygroundPage() {
-  const [step, setStep] = useState<PlaygroundStep>('schema');
-  const [selectedSchema, setSelectedSchema] = useState<SchemaResponse | null>(null);
+  const [step, setStep] = useState<PlaygroundStep>("schema");
+  const [selectedSchema, setSelectedSchema] = useState<SchemaResponse | null>(
+    null
+  );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [currentIngestionId, setCurrentIngestionId] = useState<string | null>(null);
+  const [currentIngestionId, setCurrentIngestionId] = useState<string | null>(
+    null
+  );
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const createIngestionMutation = useCreateIngestion();
-  const { data: ingestion, isLoading: isLoadingIngestion } = useIngestion(currentIngestionId);
+  const { data: ingestion, isLoading: isLoadingIngestion } =
+    useIngestion(currentIngestionId);
+  const { data: ingestionSchema } = useSchema(ingestion?.schemaId || null);
   const downloadMutation = useDownloadOutput();
+
+  // Restore schema when loading from history
+  useEffect(() => {
+    if (ingestionSchema && !selectedSchema) {
+      const timer = setTimeout(() => {
+        setSelectedSchema(ingestionSchema);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [ingestionSchema, selectedSchema]);
 
   const handleSchemaSelect = useCallback((schema: SchemaResponse) => {
     setSelectedSchema(schema);
-    setStep('upload');
+    setStep("upload");
   }, []);
 
   const handleFileSelect = useCallback((file: File) => {
@@ -54,26 +82,28 @@ export function PlaygroundPage() {
         schemaName: selectedSchema.name,
       });
       setCurrentIngestionId(result.id);
-      setStep('processing');
+      setStep("processing");
     } catch (err) {
-      console.error('Failed to start ingestion:', err);
+      console.error("Failed to start ingestion:", err);
     }
   }, [selectedFile, selectedSchema, createIngestionMutation]);
 
   const handleDownload = useCallback(
-    (format: 'csv' | 'json' = 'csv') => {
-      if (!currentIngestionId || !selectedFile) return;
+    (format: "csv" | "json" = "csv") => {
+      if (!currentIngestionId) return;
+      const filename =
+        selectedFile?.name || ingestion?.originalFilename || "output";
       downloadMutation.mutate({
         id: currentIngestionId,
-        filename: selectedFile.name,
+        filename,
         format,
       });
     },
-    [currentIngestionId, selectedFile, downloadMutation]
+    [currentIngestionId, selectedFile, ingestion, downloadMutation]
   );
 
   const handleReset = useCallback(() => {
-    setStep('schema');
+    setStep("schema");
     setSelectedSchema(null);
     setSelectedFile(null);
     setCurrentIngestionId(null);
@@ -81,7 +111,7 @@ export function PlaygroundPage() {
 
   const handleHistorySelect = useCallback((id: string) => {
     setCurrentIngestionId(id);
-    setStep('processing');
+    setStep("processing");
     setHistoryOpen(false);
   }, []);
 
@@ -89,9 +119,9 @@ export function PlaygroundPage() {
     // Refetch will happen automatically due to React Query
   }, []);
 
-  const needsReview = ingestion?.status === 'awaiting_review';
-  const isComplete = ingestion?.status === 'complete';
-  const isFailed = ingestion?.status === 'failed';
+  const needsReview = ingestion?.status === "awaiting_review";
+  const isComplete = ingestion?.status === "complete";
+  const isFailed = ingestion?.status === "failed";
 
   return (
     <PageWrapper>
@@ -125,10 +155,10 @@ export function PlaygroundPage() {
         </Collapsible>
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_300px] gap-6">
-        <div className="space-y-6">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_300px] gap-6">
+        <div className="space-y-6 min-w-0">
           {/* Step 1: Schema Selection */}
-          {step === 'schema' && (
+          {step === "schema" && (
             <SchemaSelector
               selectedSchemaId={selectedSchema?.id || null}
               onSelectSchema={handleSchemaSelect}
@@ -136,10 +166,14 @@ export function PlaygroundPage() {
           )}
 
           {/* Step 2: File Upload */}
-          {step === 'upload' && selectedSchema && (
+          {step === "upload" && selectedSchema && (
             <>
               <div className="flex items-center justify-between">
-                <Button variant="ghost" onClick={() => setStep('schema')} className="text-sm">
+                <Button
+                  variant="ghost"
+                  onClick={() => setStep("schema")}
+                  className="text-sm"
+                >
                   ← Change Schema
                 </Button>
               </div>
@@ -163,8 +197,8 @@ export function PlaygroundPage() {
                   >
                     <Play className="h-4 w-4" />
                     {createIngestionMutation.isPending
-                      ? 'Starting...'
-                      : 'Start Processing'}
+                      ? "Starting..."
+                      : "Start Processing"}
                   </Button>
                 </div>
               )}
@@ -174,7 +208,7 @@ export function PlaygroundPage() {
                   <AlertTitle>Upload Failed</AlertTitle>
                   <AlertDescription>
                     {createIngestionMutation.error?.message ||
-                      'Failed to start processing'}
+                      "Failed to start processing"}
                   </AlertDescription>
                 </Alert>
               )}
@@ -182,25 +216,20 @@ export function PlaygroundPage() {
           )}
 
           {/* Step 3: Processing / Review / Complete */}
-          {step === 'processing' && (
+          {step === "processing" && (
             <>
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <Button variant="ghost" onClick={handleReset} className="text-sm">
+                <Button
+                  variant="ghost"
+                  onClick={handleReset}
+                  className="text-sm"
+                >
                   ← Start New Job
                 </Button>
                 {isComplete && (
                   <div className="flex gap-2 w-full sm:w-auto">
                     <Button
-                      variant="outline"
-                      onClick={() => handleDownload('json')}
-                      disabled={downloadMutation.isPending}
-                      className="flex-1 sm:flex-none"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      <span className="hidden sm:inline">Download </span>JSON
-                    </Button>
-                    <Button
-                      onClick={() => handleDownload('csv')}
+                      onClick={() => handleDownload("csv")}
                       disabled={downloadMutation.isPending}
                       className="flex-1 sm:flex-none"
                     >
@@ -240,20 +269,29 @@ export function PlaygroundPage() {
                   <CardContent>
                     <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
                       <div className="p-2 sm:p-0">
-                        <p className="text-xl sm:text-2xl font-bold">{ingestion.rowCount ?? 0}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground">Total Rows</p>
+                        <p className="text-xl sm:text-2xl font-bold">
+                          {ingestion.rowCount ?? 0}
+                        </p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          Total Rows
+                        </p>
                       </div>
                       <div className="p-2 sm:p-0">
                         <p className="text-xl sm:text-2xl font-bold text-green-600">
                           {ingestion.validRowCount ?? 0}
                         </p>
-                        <p className="text-xs sm:text-sm text-muted-foreground">Valid Rows</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          Valid Rows
+                        </p>
                       </div>
                       <div className="p-2 sm:p-0">
                         <p className="text-xl sm:text-2xl font-bold text-yellow-600">
-                          {(ingestion.rowCount ?? 0) - (ingestion.validRowCount ?? 0)}
+                          {(ingestion.rowCount ?? 0) -
+                            (ingestion.validRowCount ?? 0)}
                         </p>
-                        <p className="text-xs sm:text-sm text-muted-foreground">Issues</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          Issues
+                        </p>
                       </div>
                     </div>
                   </CardContent>

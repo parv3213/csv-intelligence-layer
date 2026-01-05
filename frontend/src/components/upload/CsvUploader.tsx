@@ -1,10 +1,15 @@
-import { useState, useCallback, useRef } from 'react';
-import { Upload, FileSpreadsheet, X, AlertCircle } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { formatBytes } from '@/lib/utils';
-import { cn } from '@/lib/utils';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { cn, formatBytes } from "@/lib/utils";
+import { AlertCircle, FileSpreadsheet, Upload, X } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 
 interface CsvUploaderProps {
   onFileSelect: (file: File) => void;
@@ -31,9 +36,9 @@ export function CsvUploader({
       setError(null);
 
       // Check file extension
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      if (ext !== 'csv' && ext !== 'tsv' && ext !== 'txt') {
-        setError('Please upload a CSV file (.csv, .tsv, or .txt)');
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      if (ext !== "csv" && ext !== "tsv" && ext !== "txt") {
+        setError("Please upload a CSV file (.csv, .tsv, or .txt)");
         return false;
       }
 
@@ -53,7 +58,7 @@ export function CsvUploader({
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
-      const lines = text.split('\n').slice(0, 5);
+      const lines = text.split("\n").slice(0, 5);
       setPreview(lines);
     };
     reader.readAsText(file.slice(0, 2048)); // Read first 2KB for preview
@@ -111,7 +116,7 @@ export function CsvUploader({
     setPreview(null);
     setError(null);
     if (inputRef.current) {
-      inputRef.current.value = '';
+      inputRef.current.value = "";
     }
     onClear();
   }, [onClear]);
@@ -130,11 +135,11 @@ export function CsvUploader({
       <CardContent>
         {selectedFile ? (
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
-              <div className="flex items-center gap-3">
-                <FileSpreadsheet className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="font-medium">{selectedFile.name}</p>
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30 gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <FileSpreadsheet className="h-8 w-8 text-primary shrink-0" />
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{selectedFile.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {formatBytes(selectedFile.size)}
                   </p>
@@ -145,23 +150,26 @@ export function CsvUploader({
                 size="icon"
                 onClick={handleClear}
                 disabled={disabled}
+                className="shrink-0"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
             {preview && (
-              <div className="border rounded-lg overflow-hidden">
+              <div className="border rounded-lg overflow-hidden max-w-full">
                 <div className="bg-muted px-3 py-2 text-xs text-muted-foreground border-b">
                   Preview (first 5 rows)
                 </div>
-                <pre className="p-3 text-xs font-mono overflow-x-auto">
-                  {preview.map((line, i) => (
-                    <div key={i} className="whitespace-nowrap">
-                      {line}
-                    </div>
-                  ))}
-                </pre>
+                <div className="overflow-x-auto max-w-full">
+                  <pre className="p-3 text-xs font-mono min-w-max">
+                    {preview.map((line, i) => (
+                      <div key={i} className="whitespace-nowrap">
+                        {line}
+                      </div>
+                    ))}
+                  </pre>
+                </div>
               </div>
             )}
           </div>
@@ -172,10 +180,10 @@ export function CsvUploader({
             onDragLeave={handleDragLeave}
             onClick={() => !disabled && inputRef.current?.click()}
             className={cn(
-              'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
-              isDragOver && 'dropzone-active border-primary bg-primary/5',
-              disabled && 'opacity-50 cursor-not-allowed',
-              !isDragOver && !disabled && 'hover:bg-accent/50'
+              "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
+              isDragOver && "dropzone-active border-primary bg-primary/5",
+              disabled && "opacity-50 cursor-not-allowed",
+              !isDragOver && !disabled && "hover:bg-accent/50"
             )}
           >
             <input
@@ -188,7 +196,7 @@ export function CsvUploader({
             />
             <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
             <p className="text-sm font-medium">
-              {isDragOver ? 'Drop your file here' : 'Click or drag to upload'}
+              {isDragOver ? "Drop your file here" : "Click or drag to upload"}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               CSV, TSV, or TXT files up to {maxSizeMB}MB
