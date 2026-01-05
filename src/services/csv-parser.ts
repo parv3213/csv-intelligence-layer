@@ -217,6 +217,8 @@ export async function parseCSV(
 
     // Pipe after listeners attached
     stream.pipe(parser);
+    // Consume the output to prevent backpressure since we're using on_record
+    parser.resume();
   });
 }
 
