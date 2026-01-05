@@ -24,7 +24,7 @@ export function CsvUploader({
   selectedFile,
   onClear,
   disabled = false,
-  maxSizeMB = 100,
+  maxSizeMB = 10,
 }: CsvUploaderProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
