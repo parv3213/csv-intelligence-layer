@@ -2,6 +2,7 @@ import { PageHeader, PageWrapper } from "@/components/layout/PageWrapper";
 import { HistoryPanel } from "@/components/pipeline/HistoryPanel";
 import { PipelineTracker } from "@/components/pipeline/PipelineTracker";
 import { ReviewPanel } from "@/components/pipeline/ReviewPanel";
+import { ValidationReport } from "@/components/pipeline/ValidationReport";
 import { SchemaPreview } from "@/components/schema/SchemaPreview";
 import { SchemaSelector } from "@/components/schema/SchemaSelector";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -331,6 +332,12 @@ export function PlaygroundPage() {
                     </div>
                   </CardContent>
                 </Card>
+              )}
+
+              {ingestion?.validationResult && (
+                <ValidationReport
+                  validationResult={ingestion.validationResult}
+                />
               )}
             </>
           )}

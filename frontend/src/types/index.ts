@@ -33,6 +33,7 @@ export interface ColumnDefinition {
   dateFormat?: string;
   coerceFormats?: string[];
   validators?: Validator[];
+  strict?: boolean;
 }
 
 // Error policy options

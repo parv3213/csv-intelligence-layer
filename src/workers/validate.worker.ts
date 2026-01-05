@@ -297,12 +297,17 @@ function validateRow(
 
   // If we have a canonical schema, validate against it
   if (canonicalSchema) {
+    const errorPolicy = canonicalSchema.errorPolicy || "flag";
+
     for (const colDef of canonicalSchema.columns) {
       const sourceColumn = targetToSource.get(colDef.name);
       const rawValue = sourceColumn ? row[sourceColumn] : undefined;
 
       // Check required
-      if (colDef.required && (rawValue === null || rawValue === undefined || rawValue === "")) {
+      if (
+        colDef.required &&
+        (rawValue === null || rawValue === undefined || rawValue === "")
+      ) {
         errors.push({
           row: rowNumber,
           column: colDef.name,
@@ -336,7 +341,7 @@ function validateRow(
         hasError = true;
 
         // Apply default if available
-        if (colDef.default !== undefined) {
+        if (errorPolicy === "coerce_default" && colDef.default !== undefined) {
           mappedData[colDef.name] = colDef.default;
         } else {
           mappedData[colDef.name] = rawValue; // Keep original for flagging
@@ -344,7 +349,8 @@ function validateRow(
         continue;
       }
 
-      const coercedValue = coercion.value;
+      let coercedValue = coercion.value;
+      let columnHasError = false;
 
       // Run validators
       for (const validator of colDef.validators) {
@@ -365,11 +371,16 @@ function validateRow(
               validatorType: "unique",
             });
             hasError = true;
+            columnHasError = true;
           } else if (coercedValue !== null) {
             seen.add(coercedValue);
           }
         } else {
-          const validationResult = runValidator(coercedValue, validator, colDef);
+          const validationResult = runValidator(
+            coercedValue,
+            validator,
+            colDef
+          );
           if (!validationResult.valid) {
             errors.push({
               row: rowNumber,
@@ -381,11 +392,20 @@ function validateRow(
               validatorType: validator.type,
             });
             hasError = true;
+            columnHasError = true;
           }
         }
       }
 
-      mappedData[colDef.name] = coercedValue;
+      if (
+        columnHasError &&
+        errorPolicy === "coerce_default" &&
+        colDef.default !== undefined
+      ) {
+        mappedData[colDef.name] = colDef.default;
+      } else {
+        mappedData[colDef.name] = coercedValue;
+      }
     }
   } else {
     // No canonical schema - just apply the mapping (passthrough)
@@ -489,26 +509,39 @@ async function processValidateJob(job: Job<ValidateJobData>): Promise<void> {
 
         // Track errors by column
         for (const error of validationResult.errors) {
-          errorsByColumn[error.column] = (errorsByColumn[error.column] || 0) + 1;
+          errorsByColumn[error.column] =
+            (errorsByColumn[error.column] || 0) + 1;
         }
 
         // Apply error policy
         let action: RowError["action"] = "flagged";
 
-        switch (errorPolicy) {
-          case "reject_row":
-            action = "rejected";
-            break;
-          case "flag":
-            action = "flagged";
-            break;
-          case "coerce_default":
-            action = "coerced";
-            break;
-          case "abort":
-            throw new Error(
-              `Validation aborted due to error in row ${rowNumber}: ${validationResult.errors[0]?.message || "Unknown error"}`
-            );
+        // Check if any error occurred in a strict column
+        const hasStrictError = validationResult.errors.some((e) => {
+          const col = canonicalSchema?.columns.find((c) => c.name === e.column);
+          return col?.strict === true;
+        });
+
+        if (hasStrictError) {
+          action = "rejected";
+        } else {
+          switch (errorPolicy) {
+            case "reject_row":
+              action = "rejected";
+              break;
+            case "flag":
+              action = "flagged";
+              break;
+            case "coerce_default":
+              action = "coerced";
+              break;
+            case "abort":
+              throw new Error(
+                `Validation aborted due to error in row ${rowNumber}: ${
+                  validationResult.errors[0]?.message || "Unknown error"
+                }`
+              );
+          }
         }
 
         rowErrors.push({

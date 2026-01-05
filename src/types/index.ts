@@ -77,6 +77,7 @@ export const ColumnDefinitionSchema = z.object({
   dateFormat: z.string().optional(), // For date/datetime columns
   coerceFormats: z.array(z.string()).optional(), // Alternative formats to try
   validators: z.array(ValidatorSchema).default([]),
+  strict: z.boolean().default(false), // If true, any error in this column rejects the row
 });
 
 export type ColumnDefinition = z.infer<typeof ColumnDefinitionSchema>;

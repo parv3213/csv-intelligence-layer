@@ -123,6 +123,11 @@ function ColumnPreview({
           <Badge variant="outline" className="text-[10px] sm:text-xs font-mono">
             {column.type}
           </Badge>
+          {column.strict && (
+            <Badge variant="destructive" className="text-[10px] sm:text-xs">
+              strict
+            </Badge>
+          )}
           {column.nullable && (
             <Badge
               variant="secondary"
@@ -151,6 +156,9 @@ function ColumnPreview({
 
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
             {column.nullable && <span className="sm:hidden">Nullable</span>}
+            {column.strict && (
+              <span className="text-destructive font-medium">Strict Mode</span>
+            )}
             {column.default !== undefined && (
               <span>
                 Default:{" "}

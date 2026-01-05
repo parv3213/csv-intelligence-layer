@@ -1,32 +1,33 @@
-import { useState, useEffect } from 'react';
-import Editor from '@monaco-editor/react';
-import type { CanonicalSchema } from '@/types';
-import { usePreferencesStore } from '@/stores/history';
+import { usePreferencesStore } from "@/stores/history";
+import type { CanonicalSchema } from "@/types";
+import Editor from "@monaco-editor/react";
+import { useEffect, useState } from "react";
 
 const defaultSchema: CanonicalSchema = {
-  name: 'My Schema',
-  version: '1.0.0',
-  description: 'Custom schema definition',
+  name: "My Schema",
+  version: "1.0.0",
+  description: "Custom schema definition",
   columns: [
     {
-      name: 'id',
-      type: 'string',
+      name: "id",
+      type: "string",
       required: true,
-      description: 'Unique identifier',
+      description: "Unique identifier",
+      strict: true,
     },
     {
-      name: 'name',
-      type: 'string',
+      name: "name",
+      type: "string",
       required: true,
     },
     {
-      name: 'email',
-      type: 'email',
+      name: "email",
+      type: "email",
       required: false,
       nullable: true,
     },
   ],
-  errorPolicy: 'flag',
+  errorPolicy: "flag",
   strict: false,
 };
 
@@ -42,27 +43,28 @@ export function SchemaEditor({ initialValue, onChange }: SchemaEditorProps) {
   );
   const [parseError, setParseError] = useState<string | null>(null);
 
-  const editorTheme = theme === 'dark' ? 'vs-dark' : theme === 'light' ? 'light' : 'vs-dark';
+  const editorTheme =
+    theme === "dark" ? "vs-dark" : theme === "light" ? "light" : "vs-dark";
 
   useEffect(() => {
     try {
       const parsed = JSON.parse(value);
       // Basic validation
-      if (!parsed.name || typeof parsed.name !== 'string') {
-        throw new Error('Schema must have a name');
+      if (!parsed.name || typeof parsed.name !== "string") {
+        throw new Error("Schema must have a name");
       }
       if (!Array.isArray(parsed.columns) || parsed.columns.length === 0) {
-        throw new Error('Schema must have at least one column');
+        throw new Error("Schema must have at least one column");
       }
       for (const col of parsed.columns) {
         if (!col.name || !col.type) {
-          throw new Error('Each column must have a name and type');
+          throw new Error("Each column must have a name and type");
         }
       }
       setParseError(null);
       onChange(parsed as CanonicalSchema, true);
     } catch (err) {
-      setParseError(err instanceof Error ? err.message : 'Invalid JSON');
+      setParseError(err instanceof Error ? err.message : "Invalid JSON");
       onChange(null, false);
     }
   }, [value, onChange]);
@@ -74,22 +76,20 @@ export function SchemaEditor({ initialValue, onChange }: SchemaEditorProps) {
           height="300px"
           defaultLanguage="json"
           value={value}
-          onChange={(v) => setValue(v || '')}
+          onChange={(v) => setValue(v || "")}
           theme={editorTheme}
           options={{
             minimap: { enabled: false },
             fontSize: 13,
-            lineNumbers: 'on',
+            lineNumbers: "on",
             scrollBeyondLastLine: false,
             automaticLayout: true,
             tabSize: 2,
-            wordWrap: 'on',
+            wordWrap: "on",
           }}
         />
       </div>
-      {parseError && (
-        <p className="text-sm text-destructive">{parseError}</p>
-      )}
+      {parseError && <p className="text-sm text-destructive">{parseError}</p>}
     </div>
   );
 }

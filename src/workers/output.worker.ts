@@ -1,15 +1,20 @@
 import { Job, Worker } from "bullmq";
-import { and, eq } from "drizzle-orm";
 import { stringify } from "csv-stringify/sync";
+import { and, eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { decisionLogs, ingestions, schemas } from "../db/schema.js";
 import { parseCSV } from "../services/csv-parser.js";
-import { generateOutputFileKey, getFilePath, saveFile } from "../services/storage.js";
+import {
+  generateOutputFileKey,
+  getFilePath,
+  saveFile,
+} from "../services/storage.js";
 import type {
   CanonicalSchema,
   ColumnDefinition,
   ColumnType,
   MappingResult,
+  RowError,
 } from "../types/index.js";
 import { logger } from "../utils/logger.js";
 import { QUEUE_NAMES, redis, type OutputJobData } from "./queues.js";
@@ -82,6 +87,7 @@ function transformRow(
   mappingResult: MappingResult,
   canonicalSchema: CanonicalSchema | null,
   rejectedRows: Set<number>,
+  rowError: RowError | undefined,
   rowNumber: number
 ): Record<string, unknown> | null {
   // Skip rejected rows
@@ -100,11 +106,27 @@ function transformRow(
   }
 
   if (canonicalSchema) {
+    const errorCols = new Set(rowError?.errors.map((e) => e.column) || []);
+    const isCoerced = rowError?.action === "coerced";
+
     // Apply schema-based transformation
     for (const colDef of canonicalSchema.columns) {
       const sourceColumn = targetToSource.get(colDef.name);
       const rawValue = sourceColumn ? row[sourceColumn] : undefined;
-      mappedData[colDef.name] = coerceForOutput(rawValue, colDef.type, colDef);
+
+      if (
+        isCoerced &&
+        errorCols.has(colDef.name) &&
+        colDef.default !== undefined
+      ) {
+        mappedData[colDef.name] = colDef.default;
+      } else {
+        mappedData[colDef.name] = coerceForOutput(
+          rawValue,
+          colDef.type,
+          colDef
+        );
+      }
     }
   } else {
     // Passthrough mapping
@@ -182,8 +204,10 @@ async function processOutputJob(job: Job<OutputJobData>): Promise<void> {
 
     // Build set of rejected rows from validation result
     const rejectedRows = new Set<number>();
+    const rowErrorsMap = new Map<number, RowError>();
     if (ingestion.validationResult) {
       for (const rowError of ingestion.validationResult.errors) {
+        rowErrorsMap.set(rowError.row, rowError);
         if (rowError.action === "rejected") {
           rejectedRows.add(rowError.row);
         }
@@ -200,11 +224,13 @@ async function processOutputJob(job: Job<OutputJobData>): Promise<void> {
 
     for (let i = 0; i < parseResult.rows.length; i++) {
       const rowNumber = i + 1;
+      const rowError = rowErrorsMap.get(rowNumber);
       const transformedRow = transformRow(
         parseResult.rows[i]!,
         ingestion.mappingResult!,
         canonicalSchema,
         rejectedRows,
+        rowError,
         rowNumber
       );
 
