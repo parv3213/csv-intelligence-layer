@@ -5,6 +5,7 @@ import { db } from "../db/index.js";
 import { decisionLogs, ingestions, schemas } from "../db/schema.js";
 import { parseCSV } from "../services/csv-parser.js";
 import {
+  clearLocalCache,
   generateOutputFileKey,
   getFilePath,
   saveFile,
@@ -359,6 +360,12 @@ async function processOutputJob(job: Job<OutputJobData>): Promise<void> {
         updatedAt: new Date(),
       })
       .where(eq(ingestions.id, ingestionId));
+
+    // Cleanup local cache for raw file and output file
+    await clearLocalCache(ingestion.rawFileKey);
+    await clearLocalCache(ingestion.outputFileKey || "");
+    await clearLocalCache(csvKey);
+    if (jsonKey) await clearLocalCache(jsonKey);
   } catch (error) {
     log.error({ ingestionId, error }, "Output job failed");
 

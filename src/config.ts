@@ -15,7 +15,7 @@ const ConfigSchema = z.object({
 
   // Storage
   storageType: z.enum(["local", "s3"]).default("local"),
-  storagePath: z.string().default("./storage"),
+  storagePath: z.string().default("./temp/storage"),
   awsRegion: z.string().optional(),
   awsAccessKeyId: z.string().optional(),
   awsSecretAccessKey: z.string().optional(),
