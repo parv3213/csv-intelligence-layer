@@ -40,6 +40,8 @@ export async function buildServer() {
     },
   });
 
+  const serverUrl = config.publicUrl || `http://${config.host === '0.0.0.0' ? 'localhost' : config.host}:${config.port}`;
+
   await fastify.register(swagger, {
     openapi: {
       info: {
@@ -49,8 +51,8 @@ export async function buildServer() {
       },
       servers: [
         {
-          url: `http://${config.host}:${config.port}`,
-          description: "Development server",
+          url: serverUrl,
+          description: "API Server",
         },
       ],
     },
@@ -93,8 +95,9 @@ export async function startServer(handleSignals = true) {
     server.log.info("Dependencies ready");
 
     await server.listen({ port: config.port, host: config.host });
-    server.log.info(`Server running at http://${config.host}:${config.port}`);
-    server.log.info(`API docs at http://${config.host}:${config.port}/docs`);
+    const serverUrl = config.publicUrl || `http://${config.host === '0.0.0.0' ? 'localhost' : config.host}:${config.port}`;
+    server.log.info(`Server running at ${serverUrl}`);
+    server.log.info(`API docs at ${serverUrl}/docs`);
   } catch (err) {
     server.log.error(err);
     process.exit(1);

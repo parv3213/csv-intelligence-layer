@@ -4,6 +4,7 @@ const ConfigSchema = z.object({
   // Server
   port: z.coerce.number().default(3000),
   host: z.string().default("0.0.0.0"),
+  publicUrl: z.string().optional(),
   nodeEnv: z.enum(["development", "production", "test"]).default("development"),
 
   // Database
@@ -35,6 +36,7 @@ function loadConfig(): Config {
   const result = ConfigSchema.safeParse({
     port: process.env.PORT,
     host: process.env.HOST,
+    publicUrl: process.env.PUBLIC_URL,
     nodeEnv: process.env.NODE_ENV,
     databaseUrl: process.env.DATABASE_URL,
     redisUrl: process.env.REDIS_URL,
