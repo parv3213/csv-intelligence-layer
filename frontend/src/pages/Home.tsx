@@ -59,31 +59,32 @@ export function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="py-20 md:py-32">
+      <section className="py-12 sm:py-20 md:py-32 px-4">
         <div className="container text-center">
-          <div className="inline-flex items-center rounded-full border px-3 py-1 text-sm mb-6">
+          <div className="inline-flex items-center rounded-full border px-3 py-1 text-xs sm:text-sm mb-4 sm:mb-6">
             <span className="font-mono">v{config.projectVersion}</span>
             <span className="mx-2 text-muted-foreground">·</span>
             <span>Open Source</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight max-w-3xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight max-w-3xl mx-auto">
             A compiler for your{' '}
             <span className="text-primary">CSV chaos</span>
           </h1>
-          <p className="mt-6 text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="mt-4 sm:mt-6 text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto">
             Deterministic, explainable data transformation.
-            <br />
+            <br className="hidden sm:inline" />
+            <span className="sm:hidden"> </span>
             Know exactly what changed and why.
           </p>
-          <div className="mt-10 flex items-center justify-center gap-4">
-            <Link to="/playground">
-              <Button size="lg" className="gap-2">
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            <Link to="/playground" className="w-full sm:w-auto">
+              <Button size="lg" className="gap-2 w-full sm:w-auto">
                 Try the Playground
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/docs">
-              <Button variant="outline" size="lg">
+            <Link to="/docs" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto">
                 Read the Docs
               </Button>
             </Link>
@@ -92,25 +93,25 @@ export function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-12 sm:py-20 bg-muted/30">
         <PageWrapper>
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold">Why CSV Intelligence?</h2>
-            <p className="mt-2 text-muted-foreground">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold">Why CSV Intelligence?</h2>
+            <p className="mt-2 text-sm sm:text-base text-muted-foreground">
               Built for developers who need reliable data normalization
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {features.map((feature) => (
               <Card key={feature.title}>
-                <CardHeader>
+                <CardHeader className="pb-2 sm:pb-4">
                   <div className="p-2 w-fit rounded-lg bg-primary/10 text-primary mb-2">
                     {feature.icon}
                   </div>
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">{feature.title}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                <CardContent className="pt-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">{feature.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -119,24 +120,24 @@ export function HomePage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20">
+      <section className="py-12 sm:py-20">
         <PageWrapper>
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold">How It Works</h2>
-            <p className="mt-2 text-muted-foreground">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold">How It Works</h2>
+            <p className="mt-2 text-sm sm:text-base text-muted-foreground">
               Four simple steps to clean data
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {steps.map((step, index) => (
               <div key={step.number} className="relative">
-                <div className="flex items-start gap-4">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold shrink-0">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-primary-foreground font-bold shrink-0 text-sm sm:text-base">
                     {step.number}
                   </div>
                   <div>
-                    <h3 className="font-semibold">{step.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <h3 className="font-semibold text-sm sm:text-base">{step.title}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       {step.description}
                     </p>
                   </div>
@@ -153,17 +154,17 @@ export function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-primary text-primary-foreground">
+      <section className="py-12 sm:py-20 bg-primary text-primary-foreground px-4">
         <div className="container text-center">
-          <h2 className="text-3xl font-bold">Ready to tame your CSV chaos?</h2>
-          <p className="mt-4 text-primary-foreground/80 max-w-xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold">Ready to tame your CSV chaos?</h2>
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-primary-foreground/80 max-w-xl mx-auto">
             Start transforming messy data into clean, validated output in minutes.
           </p>
           <Link to="/playground">
             <Button
               size="lg"
               variant="secondary"
-              className="mt-8 gap-2"
+              className="mt-6 sm:mt-8 gap-2 w-full sm:w-auto"
             >
               Get Started
               <ArrowRight className="h-4 w-4" />

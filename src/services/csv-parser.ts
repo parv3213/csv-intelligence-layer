@@ -100,10 +100,6 @@ export async function parseCSV(
   if (!delimiter) {
     try {
       delimiter = await detectDelimiter(filePath, options.encoding);
-      logger.info(
-        { filePath, detectedDelimiter: delimiter },
-        "parseCSV: detected delimiter"
-      );
     } catch (err) {
       // fallback to comma on detection failure
       logger.warn(
@@ -124,6 +120,16 @@ export async function parseCSV(
     const finishOnce = (fn: () => void) => {
       return () => {
         if (settled) return;
+        logger.info(
+          {
+            filePath,
+            columns: columns.length,
+            totalRowCount,
+            parseErrors: parseErrors.length,
+            detectedDelimiter: delimiter,
+          },
+          "parseCSV: complete"
+        );
         settled = true;
         fn();
       };

@@ -1,19 +1,30 @@
-import { useState, useMemo } from 'react';
-import { AlertTriangle, Check, X, HelpCircle } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useIngestionReview, useResolveIngestion } from '@/hooks/useIngestion';
-import type { ColumnMapping, MappingDecision, SchemaResponse } from '@/types';
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useIngestionReview, useResolveIngestion } from "@/hooks/useIngestion";
+import type { ColumnMapping, MappingDecision, SchemaResponse } from "@/types";
+import { AlertTriangle, Check, HelpCircle, X } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface ReviewPanelProps {
   ingestionId: string;
@@ -21,8 +32,16 @@ interface ReviewPanelProps {
   onResolved: () => void;
 }
 
-export function ReviewPanel({ ingestionId, schema, onResolved }: ReviewPanelProps) {
-  const { data: review, isLoading, error } = useIngestionReview(ingestionId);
+export function ReviewPanel({
+  ingestionId,
+  schema,
+  onResolved,
+}: ReviewPanelProps) {
+  const {
+    data: review,
+    isLoading,
+    error,
+  } = useIngestionReview(ingestionId, true);
   const resolveMutation = useResolveIngestion();
   const [decisions, setDecisions] = useState<Record<string, string | null>>({});
 
@@ -30,7 +49,10 @@ export function ReviewPanel({ ingestionId, schema, onResolved }: ReviewPanelProp
     return schema.definition.columns.map((col) => col.name);
   }, [schema]);
 
-  const handleDecisionChange = (sourceColumn: string, targetColumn: string | null) => {
+  const handleDecisionChange = (
+    sourceColumn: string,
+    targetColumn: string | null
+  ) => {
     setDecisions((prev) => ({
       ...prev,
       [sourceColumn]: targetColumn,
@@ -40,16 +62,21 @@ export function ReviewPanel({ ingestionId, schema, onResolved }: ReviewPanelProp
   const handleSubmit = async () => {
     if (!review) return;
 
-    const mappingDecisions: MappingDecision[] = review.ambiguousMappings.map((mapping) => ({
-      sourceColumn: mapping.sourceColumn,
-      targetColumn: decisions[mapping.sourceColumn] ?? mapping.targetColumn,
-    }));
+    const mappingDecisions: MappingDecision[] = review.ambiguousMappings.map(
+      (mapping) => ({
+        sourceColumn: mapping.sourceColumn,
+        targetColumn: decisions[mapping.sourceColumn] ?? mapping.targetColumn,
+      })
+    );
 
     try {
-      await resolveMutation.mutateAsync({ id: ingestionId, decisions: mappingDecisions });
+      await resolveMutation.mutateAsync({
+        id: ingestionId,
+        decisions: mappingDecisions,
+      });
       onResolved();
     } catch (err) {
-      console.error('Failed to resolve mappings:', err);
+      console.error("Failed to resolve mappings:", err);
     }
   };
 
@@ -70,7 +97,7 @@ export function ReviewPanel({ ingestionId, schema, onResolved }: ReviewPanelProp
     );
   }
 
-  if (error || !review) {
+  if (error) {
     return (
       <Card>
         <CardContent className="py-8">
@@ -80,6 +107,10 @@ export function ReviewPanel({ ingestionId, schema, onResolved }: ReviewPanelProp
         </CardContent>
       </Card>
     );
+  }
+
+  if (!review) {
+    return null;
   }
 
   return (
@@ -111,14 +142,11 @@ export function ReviewPanel({ ingestionId, schema, onResolved }: ReviewPanelProp
         <div className="flex items-center justify-between pt-4 border-t">
           <p className="text-sm text-muted-foreground">
             {allDecisionsMade
-              ? 'All mappings reviewed'
-              : 'Review all mappings to continue'}
+              ? "All mappings reviewed"
+              : "Review all mappings to continue"}
           </p>
-          <Button
-            onClick={handleSubmit}
-            disabled={resolveMutation.isPending}
-          >
-            {resolveMutation.isPending ? 'Submitting...' : 'Submit Decisions'}
+          <Button onClick={handleSubmit} disabled={resolveMutation.isPending}>
+            {resolveMutation.isPending ? "Submitting..." : "Submit Decisions"}
           </Button>
         </div>
 
@@ -174,8 +202,8 @@ function MappingRow({
       </div>
 
       <Select
-        value={selectedValue || '__unmapped__'}
-        onValueChange={(v) => onDecisionChange(v === '__unmapped__' ? null : v)}
+        value={selectedValue || "__unmapped__"}
+        onValueChange={(v) => onDecisionChange(v === "__unmapped__" ? null : v)}
       >
         <SelectTrigger>
           <SelectValue placeholder="Select target column" />
@@ -200,23 +228,27 @@ function MappingRow({
         </SelectContent>
       </Select>
 
-      {mapping.alternativeMappings && mapping.alternativeMappings.length > 0 && (
-        <div className="text-sm text-muted-foreground">
-          <span>Alternatives: </span>
-          {mapping.alternativeMappings.map((alt, i) => (
-            <span key={alt.targetColumn}>
-              {i > 0 && ', '}
-              <button
-                onClick={() => onDecisionChange(alt.targetColumn)}
-                className="text-primary hover:underline font-mono"
-              >
-                {alt.targetColumn}
-              </button>
-              <span className="text-xs"> ({Math.round(alt.confidence * 100)}%)</span>
-            </span>
-          ))}
-        </div>
-      )}
+      {mapping.alternativeMappings &&
+        mapping.alternativeMappings.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            <span>Alternatives: </span>
+            {mapping.alternativeMappings.map((alt, i) => (
+              <span key={alt.targetColumn}>
+                {i > 0 && ", "}
+                <button
+                  onClick={() => onDecisionChange(alt.targetColumn)}
+                  className="text-primary hover:underline font-mono"
+                >
+                  {alt.targetColumn}
+                </button>
+                <span className="text-xs">
+                  {" "}
+                  ({Math.round(alt.confidence * 100)}%)
+                </span>
+              </span>
+            ))}
+          </div>
+        )}
     </div>
   );
 }

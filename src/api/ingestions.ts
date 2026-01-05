@@ -29,12 +29,14 @@ const IngestionResponseSchema = z.object({
   schemaId: z.uuid().nullable(),
   status: IngestionStatusSchema,
   rawFileKey: z.string(),
+  originalFilename: z.string().nullable(),
   outputFileKey: z.string().nullable(),
   rowCount: z.number().nullable(),
   validRowCount: z.number().nullable(),
   error: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  completedAt: z.string().nullable(),
 });
 
 const IngestionDetailResponseSchema = IngestionResponseSchema.extend({
@@ -177,6 +179,7 @@ export const ingestionRoutes: FastifyPluginAsyncZod = async (fastify) => {
         schemaId: ingestion.schemaId,
         status: ingestion.status,
         rawFileKey: ingestion.rawFileKey,
+        originalFilename: ingestion.originalFilename ?? null,
         outputFileKey: ingestion.outputFileKey,
         rowCount: ingestion.rowCount,
         validRowCount: ingestion.validRowCount,
@@ -186,6 +189,7 @@ export const ingestionRoutes: FastifyPluginAsyncZod = async (fastify) => {
         validationResult: ingestion.validationResult,
         createdAt: ingestion.createdAt.toISOString(),
         updatedAt: ingestion.updatedAt.toISOString(),
+        completedAt: ingestion.completedAt?.toISOString() ?? null,
       };
     }
   );
