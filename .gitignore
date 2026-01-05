@@ -25,7 +25,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Drizzle files
-drizzle/
+# drizzle/
 
 # Temporary storage files
 temp/
