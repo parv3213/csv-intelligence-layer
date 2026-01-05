@@ -69,7 +69,7 @@ export async function buildServer() {
   return fastify;
 }
 
-export async function startServer() {
+export async function startServer(handleSignals = true) {
   const server = await buildServer();
 
   // Graceful shutdown
@@ -77,11 +77,15 @@ export async function startServer() {
     server.log.info("Shutting down server...");
     await server.close();
     await redis.quit();
-    process.exit(0);
+    if (handleSignals) {
+      process.exit(0);
+    }
   };
 
-  process.on("SIGINT", shutdown);
-  process.on("SIGTERM", shutdown);
+  if (handleSignals) {
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
+  }
 
   try {
     server.log.info("Waiting for dependencies (DB, Redis)...");

@@ -26,14 +26,20 @@ async function startWorkers() {
   }
 }
 
-startWorkers();
+// Only run if this file is the main module
+import { fileURLToPath } from 'url';
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  startWorkers();
 
-// Graceful shutdown
-const shutdown = async () => {
-  log.info('Shutting down workers...');
-  await closeQueues();
-  process.exit(0);
-};
+  // Graceful shutdown
+  const shutdown = async () => {
+    log.info('Shutting down workers...');
+    await closeQueues();
+    process.exit(0);
+  };
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+}
+
+export { startWorkers };
