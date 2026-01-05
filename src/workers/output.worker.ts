@@ -257,7 +257,8 @@ async function processOutputJob(job: Job<OutputJobData>): Promise<void> {
     const csvKey = generateOutputFileKey(ingestionId, "csv");
     await saveFile(csvKey, Buffer.from(csvOutput, "utf-8"));
 
-    // Generate and save JSON output
+    // Generate and save JSON output (currently disabled)
+    /*
     const jsonOutput = JSON.stringify(
       {
         metadata: {
@@ -278,6 +279,7 @@ async function processOutputJob(job: Job<OutputJobData>): Promise<void> {
     );
     const jsonKey = generateOutputFileKey(ingestionId, "json");
     await saveFile(jsonKey, Buffer.from(jsonOutput, "utf-8"));
+    */
 
     // Generate and save errors report
     const errorsOutput = JSON.stringify(
@@ -329,7 +331,6 @@ async function processOutputJob(job: Job<OutputJobData>): Promise<void> {
         outputRows: outputRows.length,
         rejectedRows: rejectedRows.size,
         csvKey,
-        jsonKey,
       },
       "Output generation complete"
     );
@@ -341,7 +342,6 @@ async function processOutputJob(job: Job<OutputJobData>): Promise<void> {
       decisionType: "output_complete",
       details: {
         csvKey,
-        jsonKey,
         errorsKey,
         decisionsKey,
         schemaKey,
@@ -365,7 +365,7 @@ async function processOutputJob(job: Job<OutputJobData>): Promise<void> {
     await clearLocalCache(ingestion.rawFileKey);
     await clearLocalCache(ingestion.outputFileKey || "");
     await clearLocalCache(csvKey);
-    if (jsonKey) await clearLocalCache(jsonKey);
+
   } catch (error) {
     log.error({ ingestionId, error }, "Output job failed");
 
