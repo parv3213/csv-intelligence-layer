@@ -1,0 +1,11 @@
+OrderNum,Email,Price,Date,State
+ORD-001,alice@example.com,100.50,2023-01-01,pending
+ORD-002,bob@,50.00,2023-01-02,SHIPPED
+ORD-003,charlie@example.com,-20.00,2023-01-03,delivered
+ORD-004,dave@example.com,75.25,invalid-date,processing
+ORD-005,eve@example.com,120.00,2023-01-05,unknown
+ORD-001,frank@example.com,200.00,2023-01-06,cancelled
+ORD-007,,30.00,2023-01-07,pending
+ORD-008,grace@example.com,,2023-01-08,shipped
+ORD-009,heidi@example.com,free,2023-01-09,delivered
+ORD-010,ivan@example.com,99.99,2023-13-01,processing

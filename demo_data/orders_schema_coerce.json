@@ -1,0 +1,66 @@
+{
+  "name": "E-commerce Orders (Strict + Coerce)",
+  "version": "1.0.0",
+  "description": "Schema with strict critical columns and fallbacks for others",
+  "columns": [
+    {
+      "name": "order_id",
+      "type": "string",
+      "required": true,
+      "description": "Unique order identifier",
+      "aliases": ["orderId", "order_number", "OrderNum"],
+      "validators": [{ "type": "unique" }],
+      "strict": true
+    },
+    {
+      "name": "customer_email",
+      "type": "email",
+      "required": true,
+      "description": "Customer's email address",
+      "aliases": ["email", "buyer_email", "Email"],
+      "strict": true
+    },
+    {
+      "name": "amount",
+      "type": "float",
+      "required": true,
+      "description": "Order total amount",
+      "aliases": ["total", "price", "Total"],
+      "default": 0.0,
+      "validators": [
+        { "type": "min", "value": 0, "message": "Amount must be positive" }
+      ]
+    },
+    {
+      "name": "order_date",
+      "type": "datetime",
+      "required": true,
+      "description": "When the order was placed",
+      "aliases": ["date", "created_at", "Date", "OrderDate"],
+      "dateFormat": "yyyy-MM-dd",
+      "default": "2000-01-01T00:00:00Z"
+    },
+    {
+      "name": "status",
+      "type": "string",
+      "default": "pending",
+      "description": "Current order status",
+      "aliases": ["state", "order_status"],
+      "validators": [
+        {
+          "type": "enum",
+          "values": [
+            "pending",
+            "processing",
+            "shipped",
+            "delivered",
+            "cancelled"
+          ],
+          "message": "Invalid order status"
+        }
+      ]
+    }
+  ],
+  "errorPolicy": "coerce_default",
+  "strict": false
+}

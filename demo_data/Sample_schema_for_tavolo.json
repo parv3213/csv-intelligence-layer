@@ -1,0 +1,324 @@
+{
+    "name": "customer",
+    "version": "1.0.0",
+    "description": "Lenient canonical schema for Customer CSV import; uses coerce_default error policy.",
+    "columns": [
+      {
+        "name": "Order ID",
+        "type": "string",
+        "required": false,
+        "nullable": false,
+        "aliases": ["orderId", "order"],
+        "description": "Order identifier",
+        "default": "0",
+        "validators": []
+      },
+      {
+        "name": "client_id",
+        "type": "string",
+        "required": false,
+        "nullable": false,
+        "aliases": ["clientId"],
+        "description": "Client / account identifier",
+        "default": "0",
+        "validators": []
+      },
+      {
+        "name": "Customer ID",
+        "type": "string",
+        "required": false,
+        "nullable": false,
+        "aliases": ["customerId"],
+        "description": "Customer identifier",
+        "default": "0",
+        "validators": []
+      },
+      {
+        "name": "firstName",
+        "type": "string",
+        "required": false,
+        "nullable": false,
+        "aliases": ["firstName", "firstname", "First Name"],
+        "description": "Given name",
+        "default": "noname",
+        "validators": []
+      },
+      {
+        "name": "lastName",
+        "type": "string",
+        "required": false,
+        "nullable": false,
+        "aliases": ["lastName", "lastname", "Last Name"],
+        "description": "Family name",
+        "default": "noname",
+        "validators": []
+      },
+      {
+        "name": "emailAddress",
+        "type": "email",
+        "required": true,
+        "nullable": false,
+        "aliases": ["email", "emailAddress", "Email 1"],
+        "description": "Contact email",
+        "validators": []
+      },
+      {
+        "name": "phoneNumber",
+        "type": "string",
+        "required": false,
+        "nullable": false,
+        "aliases": ["phone", "phoneNumber", "Phone 1"],
+        "description": "Contact phone number",
+        "default": "0",
+        "validators": []
+      },
+      {
+        "name": "MarketingStatus",
+        "type": "string",
+        "required": false,
+        "nullable": false,
+        "aliases": ["marketingStatus"],
+        "description": "Marketing opt-in / status",
+        "default": "0",
+        "validators": []
+      },
+      {
+        "name": "dateOfBirth",
+        "type": "date",
+        "required": false,
+        "nullable": true,
+        "aliases": ["dob", "birth_date"],
+        "description": "Date of birth",
+        "default": null,
+        "dateFormat": "YYYY-MM-DD",
+        "coerceFormats": [
+          "YYYY-MM-DD",
+          "MM/DD/YYYY",
+          "M/D/YYYY",
+          "DD-MM-YYYY",
+          "ISO8601"
+        ],
+        "validators": []
+      },
+      {
+        "name": "Line Items",
+        "type": "json",
+        "required": false,
+        "nullable": true,
+        "aliases": ["lineItems", "items"],
+        "description": "Serialized line items (JSON/text)",
+        "default": [],
+        "validators": []
+      },
+      {
+        "name": "Price",
+        "type": "float",
+        "required": false,
+        "nullable": false,
+        "aliases": ["unit_price", "price_value"],
+        "description": "Unit price or price string",
+        "default": 0.0,
+        "validators": []
+      },
+      {
+        "name": "Modified Time (CST)",
+        "type": "datetime",
+        "required": false,
+        "nullable": true,
+        "aliases": ["modifiedTimeCST", "modified_at_cst", "Last Activity Date (UTC+0)"],
+        "description": "Last modified timestamp (CST)",
+        "default": null,
+        "dateFormat": "YYYY-MM-DDTHH:mm:ssZ",
+        "coerceFormats": [
+          "YYYY-MM-DDTHH:mm:ssZ",
+          "YYYY-MM-DD HH:mm:ss",
+          "MM/DD/YYYY HH:mm:ss",
+          "ISO8601"
+        ],
+        "validators": []
+      },
+      {
+        "name": "quantity_array",
+        "type": "json",
+        "required": false,
+        "nullable": true,
+        "aliases": ["quantities", "quantityArray"],
+        "description": "Serialized quantities array",
+        "default": [],
+        "validators": []
+      },
+      {
+        "name": "TotalOrders",
+        "type": "integer",
+        "required": false,
+        "nullable": false,
+        "aliases": ["totalOrders"],
+        "description": "Total number of orders for the customer",
+        "default": 0,
+        "validators": []
+      },
+      {
+        "name": "TotalOrderValue",
+        "type": "float",
+        "required": false,
+        "nullable": false,
+        "aliases": ["totalOrderValue"],
+        "description": "Cumulative order value",
+        "default": 0.0,
+        "validators": []
+      },
+      {
+        "name": "AverageOrderValue",
+        "type": "float",
+        "required": false,
+        "nullable": false,
+        "aliases": ["averageOrderValue"],
+        "description": "Average order value",
+        "default": 0.0,
+        "validators": []
+      },
+      {
+        "name": "Currency",
+        "type": "string",
+        "required": false,
+        "nullable": false,
+        "aliases": [],
+        "description": "Currency code",
+        "default": "USD",
+        "validators": []
+      },
+      {
+        "name": "RegistrationDate",
+        "type": "datetime",
+        "required": false,
+        "nullable": true,
+        "aliases": ["registrationDate"],
+        "description": "Registration timestamp (UTC preferred)",
+        "default": null,
+        "dateFormat": "YYYY-MM-DDTHH:mm:ssZ",
+        "coerceFormats": [
+          "YYYY-MM-DDTHH:mm:ssZ",
+          "YYYY-MM-DD",
+          "MM/DD/YYYY",
+          "ISO8601"
+        ],
+        "validators": []
+      },
+      {
+        "name": "RegistrationDateLocal",
+        "type": "datetime",
+        "required": false,
+        "nullable": true,
+        "aliases": ["registrationDateLocal"],
+        "description": "Registration timestamp in local timezone",
+        "default": null,
+        "dateFormat": "YYYY-MM-DDTHH:mm:ssZ",
+        "coerceFormats": [
+          "YYYY-MM-DDTHH:mm:ssZ",
+          "YYYY-MM-DD",
+          "MM/DD/YYYY",
+          "ISO8601"
+        ],
+        "validators": []
+      },
+      {
+        "name": "FirstOrderDate",
+        "type": "datetime",
+        "required": false,
+        "nullable": true,
+        "aliases": ["firstOrderDate"],
+        "description": "Timestamp of first order",
+        "default": null,
+        "dateFormat": "YYYY-MM-DDTHH:mm:ssZ",
+        "coerceFormats": [
+          "YYYY-MM-DDTHH:mm:ssZ",
+          "YYYY-MM-DD",
+          "MM/DD/YYYY",
+          "ISO8601"
+        ],
+        "validators": []
+      },
+      {
+        "name": "FirstOrderDateLocal",
+        "type": "datetime",
+        "required": false,
+        "nullable": true,
+        "aliases": ["firstOrderDateLocal"],
+        "description": "First order timestamp (local)",
+        "default": null,
+        "dateFormat": "YYYY-MM-DDTHH:mm:ssZ",
+        "coerceFormats": [
+          "YYYY-MM-DDTHH:mm:ssZ",
+          "YYYY-MM-DD",
+          "MM/DD/YYYY",
+          "ISO8601"
+        ],
+        "validators": []
+      },
+      {
+        "name": "LastOrderDate",
+        "type": "datetime",
+        "required": false,
+        "nullable": true,
+        "aliases": ["lastOrderDate"],
+        "description": "Timestamp of most recent order",
+        "default": null,
+        "dateFormat": "YYYY-MM-DDTHH:mm:ssZ",
+        "coerceFormats": [
+          "YYYY-MM-DDTHH:mm:ssZ",
+          "YYYY-MM-DD",
+          "MM/DD/YYYY",
+          "ISO8601"
+        ],
+        "validators": []
+      },
+      {
+        "name": "CustomerName",
+        "type": "string",
+        "required": false,
+        "nullable": false,
+        "aliases": ["customerName", "name"],
+        "description": "Full customer name",
+        "default": "0",
+        "validators": []
+      },
+      {
+        "name": "EstimatedAnnualValue",
+        "type": "float",
+        "required": false,
+        "nullable": false,
+        "aliases": ["estimatedAnnualValue", "eav"],
+        "description": "Estimated annual value (monetary)",
+        "default": 0.0,
+        "validators": []
+      },
+      {
+        "name": "_merge",
+        "type": "string",
+        "required": false,
+        "nullable": false,
+        "aliases": ["mergeStatus"],
+        "description": "Merge / deduplication state",
+        "default": "0",
+        "validators": []
+      },
+      {
+        "name": "created_at",
+        "type": "datetime",
+        "required": false,
+        "nullable": false,
+        "aliases": ["createdAt", "Created At (UTC+0)"],
+        "description": "Record creation timestamp",
+        "default": "1970-01-01T00:00:00Z",
+        "dateFormat": "YYYY-MM-DDTHH:mm:ssZ",
+        "coerceFormats": [
+          "YYYY-MM-DDTHH:mm:ssZ",
+          "YYYY-MM-DD HH:mm:ss",
+          "ISO8601"
+        ],
+        "validators": []
+      }
+    ],
+    "errorPolicy": "coerce_default",
+    "strict": false
+  }
