@@ -7,7 +7,7 @@ A production-grade data ingestion and normalization service that treats CSVs as 
 ## 🚀 Live Demo
 
 [![Try Live Demo](https://img.shields.io/badge/Try%20Live%20Demo-4285F4?style=for-the-badge&logo=vercel&logoColor=white)](https://csv-intelligence.vercel.app/)
-[![Watch Demo Video](https://img.shields.io/badge/Watch%20Demo%20Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](#demo-video)
+[![Watch Demo Video](https://img.shields.io/badge/Watch%20Demo%20Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/YmJzh_EW9fU)
 
 - **Frontend**: [https://csv-intelligence.vercel.app/](https://csv-intelligence.vercel.app/)
 - **Backend API**: [https://csv-intelligence-layer-production.up.railway.app](https://csv-intelligence-layer-production.up.railway.app)
